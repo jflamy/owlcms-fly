@@ -3,7 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <!-- Project from https://start.vaadin.com/project/aabbaf5d-ec09-4523-9db4-24c5e03107b0 -->
-    <groupId>ca.lerta</groupId>
+    <groupId>ca.lerta.fly</groupId>
     <artifactId>owlcms-fly</artifactId>
     <name>owlcms-fly</name>
     <version>1.0-SNAPSHOT</version>

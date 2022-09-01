@@ -8,6 +8,7 @@
     "@polymer/iron-meta": "3.0.1",
     "@polymer/iron-resizable-behavior": "3.0.1",
     "@polymer/polymer": "3.5.1",
+    "@vaadin-component-factory/vcf-nav": "1.0.6",
     "@vaadin/accordion": "23.1.6",
     "@vaadin/app-layout": "23.1.6",
     "@vaadin/avatar": "23.1.6",
@@ -117,6 +118,7 @@
     "@vaadin/virtual-list": "23.1.6",
     "construct-style-sheets-polyfill": "3.1.0",
     "date-fns": "2.28.0",
+    "line-awesome": "1.3.0",
     "lit": "2.2.6"
   },
   "devDependencies": {
@@ -140,13 +142,7 @@
     "webpack-merge": "4.2.2",
     "workbox-core": "6.5.0",
     "workbox-precaching": "6.5.0",
-    "workbox-webpack-plugin": "6.5.0",
-    "mkdirp": "1.0.4",
-    "vite": "v2.9.13",
-    "rollup-plugin-brotli": "3.1.0",
-    "workbox-build": "6.5.0",
-    "vite-plugin-checker": "0.4.6",
-    "@rollup/plugin-replace": "3.1.0"
+    "workbox-webpack-plugin": "6.5.0"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -264,7 +260,9 @@
     "lit": "$lit",
     "@polymer/polymer": "$@polymer/polymer",
     "chokidar": "$chokidar",
-    "date-fns": "$date-fns"
+    "date-fns": "$date-fns",
+    "@vaadin-component-factory/vcf-nav": "$@vaadin-component-factory/vcf-nav",
+    "line-awesome": "$line-awesome"
   },
   "vaadin": {
     "dependencies": {
@@ -274,6 +272,7 @@
       "@polymer/iron-meta": "3.0.1",
       "@polymer/iron-resizable-behavior": "3.0.1",
       "@polymer/polymer": "3.4.1",
+      "@vaadin-component-factory/vcf-nav": "1.0.6",
       "@vaadin/accordion": "23.1.6",
       "@vaadin/app-layout": "23.1.6",
       "@vaadin/avatar": "23.1.6",
@@ -382,6 +381,7 @@
       "@vaadin/virtual-list": "23.1.6",
       "construct-style-sheets-polyfill": "3.1.0",
       "date-fns": "2.28.0",
+      "line-awesome": "1.3.0",
       "lit": "2.2.3"
     },
     "devDependencies": {
@@ -405,14 +405,8 @@
       "webpack-merge": "4.2.2",
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0",
-      "workbox-webpack-plugin": "6.5.0",
-      "mkdirp": "1.0.4",
-      "vite": "v2.9.13",
-      "rollup-plugin-brotli": "3.1.0",
-      "workbox-build": "6.5.0",
-      "vite-plugin-checker": "0.4.6",
-      "@rollup/plugin-replace": "3.1.0"
+      "workbox-webpack-plugin": "6.5.0"
     },
-    "hash": "36bc7f5fd8cab7cf957600abf35fce87276bad1c58ddda1f1f8db2c0f0ac220e"
+    "hash": "a1907bfbde9a8ff5dfbb812b44f66f3ea4a8bf94d38387ec7b78c0dc082a3cc9"
   }
 }
