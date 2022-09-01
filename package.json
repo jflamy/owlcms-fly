@@ -140,7 +140,13 @@
     "webpack-merge": "4.2.2",
     "workbox-core": "6.5.0",
     "workbox-precaching": "6.5.0",
-    "workbox-webpack-plugin": "6.5.0"
+    "workbox-webpack-plugin": "6.5.0",
+    "mkdirp": "1.0.4",
+    "vite": "v2.9.13",
+    "rollup-plugin-brotli": "3.1.0",
+    "workbox-build": "6.5.0",
+    "vite-plugin-checker": "0.4.6",
+    "@rollup/plugin-replace": "3.1.0"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -399,7 +405,13 @@
       "webpack-merge": "4.2.2",
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0",
-      "workbox-webpack-plugin": "6.5.0"
+      "workbox-webpack-plugin": "6.5.0",
+      "mkdirp": "1.0.4",
+      "vite": "v2.9.13",
+      "rollup-plugin-brotli": "3.1.0",
+      "workbox-build": "6.5.0",
+      "vite-plugin-checker": "0.4.6",
+      "@rollup/plugin-replace": "3.1.0"
     },
     "hash": "36bc7f5fd8cab7cf957600abf35fce87276bad1c58ddda1f1f8db2c0f0ac220e"
   }
