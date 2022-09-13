@@ -16,6 +16,7 @@ import ca.lerta.fly.data.service.UserRepository;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
+    //FIXME: we do not need a JPA repository
     private final UserRepository userRepository;
 
     @Autowired
@@ -25,6 +26,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        //FIXME: this must return a fake user if the fly.io token has been acquired.
         User user = userRepository.findByUsername(username);
         if (user == null) {
             throw new UsernameNotFoundException("No user present with username: " + username);
@@ -37,7 +39,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private static List<GrantedAuthority> getAuthorities(User user) {
         return user.getRoles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
-
     }
 
 }

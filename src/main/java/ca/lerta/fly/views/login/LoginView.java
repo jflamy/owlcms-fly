@@ -17,6 +17,9 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
     public LoginView(AuthenticatedUser authenticatedUser) {
         this.authenticatedUser = authenticatedUser;
+        this.addLoginListener(e -> {
+            System.err.println(e.getUsername());
+        });
         setAction("login");
 
         LoginI18n i18n = LoginI18n.createDefault();
@@ -26,7 +29,8 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         i18n.setAdditionalInformation(null);
         setI18n(i18n);
 
-        setForgotPasswordButtonVisible(false);
+        setForgotPasswordButtonVisible(true);
+
         setOpened(true);
     }
 
@@ -40,4 +44,5 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
         setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));
     }
+
 }

@@ -37,7 +37,7 @@ import org.springframework.data.domain.PageRequest;
 @Route(value = "apps/:applicationID?/:action?(edit)", layout = MainLayout.class)
 @PermitAll
 @Uses(Icon.class)
-@Uses(Icon.class)
+
 public class AppsView extends Div implements BeforeEnterObserver {
 
     private final String APPLICATION_ID = "applicationID";

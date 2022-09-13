@@ -7,7 +7,7 @@ import ca.lerta.fly.security.AuthenticatedUser;
 import ca.lerta.fly.views.about.AboutView;
 import ca.lerta.fly.views.apps.AppsView;
 import ca.lerta.fly.views.creditcardform.CreditCardFormView;
-import ca.lerta.fly.views.deploy.DeployView;
+import ca.lerta.fly.views.flylogin.FlyOpenerView;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -16,6 +16,7 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
@@ -37,13 +38,34 @@ public class MainLayout extends AppLayout {
     private AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
 
+    static private MainLayout current = null;
+
+    private Component drawer;
+
+    private com.vaadin.flow.component.html.Section section;
+
+    public static MainLayout getCurrent() {
+        return current;
+    }
+
+    public static void setCurrent(MainLayout current) {
+        MainLayout.current = current;
+    }
+
     public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
 
         setPrimarySection(Section.DRAWER);
         addToNavbar(true, createHeaderContent());
-        addToDrawer(createDrawerContent());
+        drawer = createDrawerContent();
+        addToDrawer(drawer);
+        current = this;
+    }
+
+    public void recomputeDrawer() {
+        section.getElement().removeAllChildren();
+        createDrawerContent();
     }
 
     private Component createHeaderContent() {
@@ -63,9 +85,12 @@ public class MainLayout extends AppLayout {
     private Component createDrawerContent() {
         H2 appName = new H2("owlcms-fly");
         appName.addClassNames("app-name");
-
-        com.vaadin.flow.component.html.Section section = new com.vaadin.flow.component.html.Section(appName,
-                createNavigation(), createFooter());
+        if (section == null) {
+            section = new com.vaadin.flow.component.html.Section(appName,
+                    createNavigation(), createFooter());
+        } else {
+            section.add(appName, createNavigation(), createFooter());
+        }
         section.addClassNames("drawer-section");
         return section;
     }
@@ -76,8 +101,8 @@ public class MainLayout extends AppLayout {
         AppNav nav = new AppNav();
         nav.addClassNames("app-nav");
 
-        if (accessChecker.hasAccess(DeployView.class)) {
-            nav.addItem(new AppNavItem("Deploy", DeployView.class, "lab la-fly"));
+        if (accessChecker.hasAccess(FlyOpenerView.class)) {
+            nav.addItem(new AppNavItem("Deploy", FlyOpenerView.class, "lab la-fly"));
 
         }
         if (accessChecker.hasAccess(AppsView.class)) {
