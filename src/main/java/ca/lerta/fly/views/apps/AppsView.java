@@ -33,7 +33,7 @@ import javax.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 
-@PageTitle("Apps")
+@PageTitle("Fly.io owlcms Applications")
 @Route(value = "apps/:applicationID?/:action?(edit)", layout = MainLayout.class)
 @PermitAll
 @Uses(Icon.class)
