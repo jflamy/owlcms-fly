@@ -11,6 +11,10 @@ import ca.lerta.fly.security.AuthenticatedUser;
 
 @PageTitle("Login")
 @Route(value = "login")
+/*
+ * This class is unused. Kept for possible future use.
+ */
+@Deprecated 
 public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
     private final AuthenticatedUser authenticatedUser;

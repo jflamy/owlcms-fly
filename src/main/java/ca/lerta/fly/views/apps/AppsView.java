@@ -177,6 +177,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
         createButtonLayout(editorLayoutDiv);
 
         splitLayout.addToSecondary(editorLayoutDiv);
+        splitLayout.setSplitterPosition(40D);
     }
 
     private void createButtonLayout(Div editorLayoutDiv) {

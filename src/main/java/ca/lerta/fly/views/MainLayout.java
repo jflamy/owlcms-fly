@@ -1,13 +1,7 @@
 package ca.lerta.fly.views;
 
-import ca.lerta.fly.components.appnav.AppNav;
-import ca.lerta.fly.components.appnav.AppNavItem;
-import ca.lerta.fly.data.entity.User;
-import ca.lerta.fly.security.AuthenticatedUser;
-import ca.lerta.fly.views.about.AboutView;
-import ca.lerta.fly.views.apps.AppsView;
-import ca.lerta.fly.views.creditcardform.CreditCardFormView;
-import ca.lerta.fly.views.flylogin.FlyOpenerView;
+import java.io.ByteArrayInputStream;
+import java.util.Optional;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -16,7 +10,6 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
@@ -25,8 +18,14 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
-import java.io.ByteArrayInputStream;
-import java.util.Optional;
+
+import ca.lerta.fly.components.appnav.AppNav;
+import ca.lerta.fly.components.appnav.AppNavItem;
+import ca.lerta.fly.data.entity.User;
+import ca.lerta.fly.security.AuthenticatedUser;
+import ca.lerta.fly.views.about.AboutView;
+import ca.lerta.fly.views.apps.AppsView;
+import ca.lerta.fly.views.flylogin.FlyOpenerView;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -102,20 +101,16 @@ public class MainLayout extends AppLayout {
         nav.addClassNames("app-nav");
 
         if (accessChecker.hasAccess(FlyOpenerView.class)) {
-            nav.addItem(new AppNavItem("Deploy", FlyOpenerView.class, "lab la-fly"));
-
+            nav.addItem(new AppNavItem("Login", FlyOpenerView.class, "lab la-fly"));
         }
         if (accessChecker.hasAccess(AppsView.class)) {
             nav.addItem(new AppNavItem("Apps", AppsView.class, "la la-columns"));
-
         }
-        if (accessChecker.hasAccess(CreditCardFormView.class)) {
-            nav.addItem(new AppNavItem("Credit Card Form", CreditCardFormView.class, "la la-credit-card"));
-
-        }
+        // if (accessChecker.hasAccess(CreditCardFormView.class)) {
+        //     nav.addItem(new AppNavItem("Credit Card Form", CreditCardFormView.class, "la la-credit-card"));
+        // }
         if (accessChecker.hasAccess(AboutView.class)) {
             nav.addItem(new AppNavItem("About", AboutView.class, "la la-file"));
-
         }
 
         return nav;

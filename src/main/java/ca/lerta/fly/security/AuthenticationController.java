@@ -22,6 +22,9 @@ public class AuthenticationController
 
   public Authentication authenticate(String username, String password, HttpServletRequest request, HttpServletResponse response)
   {
+    //FIXME: check that login to fly.io has succeeded.
+
+    // authenticate the dummy user so the rest of the pages is done.
     Authentication result = SecurityConfiguration.authenticationManagerBean.authenticate(new UsernamePasswordAuthenticationToken(username, password));
     SecurityContextHolder.getContext().setAuthentication(result);
 

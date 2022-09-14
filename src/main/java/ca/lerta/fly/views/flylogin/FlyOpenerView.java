@@ -8,10 +8,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
@@ -19,7 +17,6 @@ import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.server.VaadinServletResponse;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
-import ca.lerta.fly.data.entity.SampleAddress;
 import ca.lerta.fly.data.service.SampleAddressService;
 import ca.lerta.fly.security.AuthenticationController;
 import ca.lerta.fly.views.MainLayout;
@@ -33,10 +30,8 @@ import ca.lerta.fly.views.apps.AppsView;
 
 public class FlyOpenerView extends Div {
 
-    private Button cancel = new Button("Cancel");
-    private Button save = new Button("Save");
-
-    private Binder<SampleAddress> binder = new Binder<>(SampleAddress.class);
+    private Button cancel = new Button("Logout");
+    private Button save = new Button("Login");
 
     public FlyOpenerView(SampleAddressService addressService) {
         addClassName("deploy-view");
@@ -44,10 +39,6 @@ public class FlyOpenerView extends Div {
         add(createTitle());
         add(createFormLayout());
         add(createButtonLayout());
-
-        // binder.bindInstanceFields(this);
-
-        clearForm();
 
         cancel.addClickListener(e -> {
             new AuthenticationController().logout(
@@ -58,16 +49,19 @@ public class FlyOpenerView extends Div {
             new AuthenticationController().authenticate("user", "user",
                     VaadinServletRequest.getCurrent().getHttpServletRequest(),
                     VaadinServletResponse.getCurrent().getHttpServletResponse());
-            addressService.update(binder.getBean());
-            Notification.show(binder.getBean().getClass().getSimpleName() + " stored.");
-            MainLayout.getCurrent().recomputeDrawer();
+            //Notification.show(binder.getBean().getClass().getSimpleName() + " stored.");
             UI.getCurrent().navigate(AppsView.class);
-            clearForm();
+            MainLayout.getCurrent().recomputeDrawer();
         });
     }
 
     private Component createTitle() {
-        return new H3("Connect to Fly.io");
+        Div div = new Div();
+        //H3 title = new H3("Connect to Fly.io");
+        Paragraph p = new Paragraph("Use the Connect button to go to the fly.io login page. If you do not have an account, you will be able to create one there");
+        Paragraph p2 = new Paragraph("A new browser tab will open. After you have logged in, come back to this tab.");
+        div.add(/*title,*/ p, p2);
+        return div;
     }
 
     private Component createFormLayout() {
@@ -82,10 +76,6 @@ public class FlyOpenerView extends Div {
         buttonLayout.add(save);
         buttonLayout.add(cancel);
         return buttonLayout;
-    }
-
-    private void clearForm() {
-        this.binder.setBean(new SampleAddress());
     }
 
 }
