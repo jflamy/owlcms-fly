@@ -17,7 +17,6 @@ import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.server.VaadinServletResponse;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
-import ca.lerta.fly.data.service.SampleAddressService;
 import ca.lerta.fly.security.AuthenticationController;
 import ca.lerta.fly.views.MainLayout;
 import ca.lerta.fly.views.apps.AppsView;
@@ -33,7 +32,7 @@ public class FlyOpenerView extends Div {
     private Button cancel = new Button("Logout");
     private Button save = new Button("Login");
 
-    public FlyOpenerView(SampleAddressService addressService) {
+    public FlyOpenerView() {
         addClassName("deploy-view");
 
         add(createTitle());
