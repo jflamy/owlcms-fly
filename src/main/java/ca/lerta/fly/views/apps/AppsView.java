@@ -24,8 +24,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.Notification.Position;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -157,7 +155,6 @@ public class AppsView extends Div implements BeforeEnterObserver {
     public void onAttach(AttachEvent e) {
         ui = UI.getCurrent();
         notif = new Dialog(new Paragraph("Waiting for a successful fly.io login."));
-        notif.setVisible(false);
         notif.setModal(true);
         new Thread(() -> {
             String[] token = new String[1];
@@ -188,14 +185,14 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private void openNotification(String token) {
         ui.access(() -> {
             logger.warn("opening {} since token {}", notif, token);
-            notif.setVisible(true);
+            notif.open();
         });
     }
 
     private void closeNotification(String token) {
         ui.access(() -> {
             logger.warn("closing {} since token {}", notif, token);
-            notif.setVisible(false);
+            notif.close();
         });
     }
 

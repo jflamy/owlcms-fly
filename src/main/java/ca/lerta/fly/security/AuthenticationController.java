@@ -13,8 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Controller;
 
 import com.vaadin.flow.component.UI;
@@ -24,7 +22,7 @@ import ch.qos.logback.classic.Logger;
 
 @Controller
 public class AuthenticationController {
-  private static final String SECURITY_CONTEXT_REPOSITORY = "SECURITY_CONTEXT_REPOSITORY";
+  // private static final String SECURITY_CONTEXT_REPOSITORY = "SECURITY_CONTEXT_REPOSITORY";
 
   Logger logger = (Logger) LoggerFactory.getLogger(AuthenticationController.class);
 
@@ -45,8 +43,10 @@ public class AuthenticationController {
 
     AuthenticationManager authenticationManagerBean = SecurityConfiguration.authenticationManagerBean;
     SecurityContext context = SecurityContextHolder.getContext();
-    // HttpServletRequest httpServletRequest = VaadinServletRequest.getCurrent().getHttpServletRequest();
-    // HttpServletResponse httpServletResponse = VaadinServletResponse.getCurrent().getHttpServletResponse();
+    // HttpServletRequest httpServletRequest =
+    // VaadinServletRequest.getCurrent().getHttpServletRequest();
+    // HttpServletResponse httpServletResponse =
+    // VaadinServletResponse.getCurrent().getHttpServletResponse();
 
     flyAuth.waitForTokenString(
         map.get("id"),
@@ -54,28 +54,33 @@ public class AuthenticationController {
           logger.info("Access token retrieved {}", token);
           flyAuth.setAccessToken(token);
           VaadinSession session = ui.getSession();
-          session.access(() -> {session.setAttribute("ACCESS_TOKEN",token);});
+          session.access(() -> {
+            session.setAttribute("ACCESS_TOKEN", token);
+          });
         });
 
     Authentication result = authenticationManagerBean
         .authenticate(new UsernamePasswordAuthenticationToken("user", "user"));
     context.setAuthentication(result);
     logger.info("authentication changed");
-    //this.securityContextRepository(ui.getSession()).saveContext(context, httpServletRequest, httpServletResponse);
+    // this.securityContextRepository(ui.getSession()).saveContext(context,
+    // httpServletRequest, httpServletResponse);
   }
 
-  SecurityContextRepository scr = null;
+  // SecurityContextRepository scr = null;
 
-  private SecurityContextRepository securityContextRepository(VaadinSession session) {
-    session.access(() -> {
-      scr = (SecurityContextRepository) session.getAttribute(SECURITY_CONTEXT_REPOSITORY);
-      if (scr == null) {
-        scr = new HttpSessionSecurityContextRepository();
-        session.setAttribute(SECURITY_CONTEXT_REPOSITORY, scr);
-      }
-    });
-    return scr;
-  }
+  // private SecurityContextRepository securityContextRepository(VaadinSession
+  // session) {
+  // session.access(() -> {
+  // scr = (SecurityContextRepository)
+  // session.getAttribute(SECURITY_CONTEXT_REPOSITORY);
+  // if (scr == null) {
+  // scr = new HttpSessionSecurityContextRepository();
+  // session.setAttribute(SECURITY_CONTEXT_REPOSITORY, scr);
+  // }
+  // });
+  // return scr;
+  // }
 
   public void logout(HttpServletRequest request, HttpServletResponse response) {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
