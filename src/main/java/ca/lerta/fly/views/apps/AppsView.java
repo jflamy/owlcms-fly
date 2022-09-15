@@ -139,7 +139,8 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private void configureDialog() {
         UI ui = UI.getCurrent();
         MainLayout mainLayout = MainLayout.getCurrent();
-        dialog = new Dialog(dialogInitialText());
+        Component dialogInitialText = dialogInitialText();
+        dialog = new Dialog(dialogInitialText);
         dialog.setModal(true);
         dialog.getHeader().add(new H3("Connect to Fly.io"));
         dialog.getFooter().add(login, logout);
@@ -149,9 +150,13 @@ public class AppsView extends Div implements BeforeEnterObserver {
                     VaadinServletResponse.getCurrent().getHttpServletResponse());
         });
         login.addClickListener(e -> {
+            dialog.remove(dialogInitialText);
+            dialog.add(new Paragraph("Waiting for fly.io login to have been completed."));
             new AuthenticationController().authenticate(() -> {
-                ui.navigate(AppsView.class);
-                mainLayout.recomputeDrawer();
+                ui.access(() -> {
+                // ui.navigate(AppsView.class);
+                // mainLayout.recomputeDrawer();
+                });
             });
         });
     }
