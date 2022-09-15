@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.flow.component.UI;
 
 import ch.qos.logback.classic.Logger;
 
@@ -61,7 +62,6 @@ public class FlyAuth {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public void waitForTokenString(String id, Consumer<String> callback) {
@@ -107,5 +107,15 @@ public class FlyAuth {
     public void setAccessToken(String token) {
         this.accessToken = token;
     }
+
+    public void openFlyLogin(String authUrl, UI ui) {
+        logger.info("opening login page {}", authUrl);
+        new Thread(() -> {
+          ui.access(() -> {
+            ui.getPage().open(authUrl);
+          });
+        }).start();
+        return;
+      }
 
 }

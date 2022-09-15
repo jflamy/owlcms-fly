@@ -33,7 +33,6 @@ public class AuthenticatedUser {
 
     public Optional<User> get() {
         // if the optional is present, then the user is authenticated.
-
         return getAuthentication().map(authentication -> userRepository.findByUsername(authentication.getName()));
     }
 

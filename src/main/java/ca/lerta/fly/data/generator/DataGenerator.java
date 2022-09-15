@@ -5,7 +5,7 @@ import com.vaadin.exampledata.ExampleDataGenerator;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 
 import ca.lerta.fly.data.Role;
-import ca.lerta.fly.data.entity.Application;
+import ca.lerta.fly.data.entity.FlyApplication;
 import ca.lerta.fly.data.entity.User;
 import ca.lerta.fly.data.service.ApplicationRepository;
 import ca.lerta.fly.data.service.UserRepository;
@@ -55,12 +55,12 @@ public class DataGenerator {
             admin.setRoles(Set.of(Role.USER, Role.ADMIN));
             userRepository.save(admin);
             logger.info("... generating 2 Application entities...");
-            ExampleDataGenerator<Application> applicationRepositoryGenerator = new ExampleDataGenerator<>(
-                    Application.class, LocalDateTime.of(2022, 9, 1, 0, 0, 0));
-            applicationRepositoryGenerator.setData(Application::setName, DataType.WORD);
-            applicationRepositoryGenerator.setData(Application::setNameOn, DataType.BOOLEAN_90_10);
-            applicationRepositoryGenerator.setData(Application::setResults, DataType.WORD);
-            applicationRepositoryGenerator.setData(Application::setResultsOn, DataType.BOOLEAN_50_50);
+            ExampleDataGenerator<FlyApplication> applicationRepositoryGenerator = new ExampleDataGenerator<>(
+                    FlyApplication.class, LocalDateTime.of(2022, 9, 1, 0, 0, 0));
+            applicationRepositoryGenerator.setData(FlyApplication::setName, DataType.WORD);
+            applicationRepositoryGenerator.setData(FlyApplication::setNameOn, DataType.BOOLEAN_90_10);
+            applicationRepositoryGenerator.setData(FlyApplication::setResults, DataType.WORD);
+            applicationRepositoryGenerator.setData(FlyApplication::setResultsOn, DataType.BOOLEAN_50_50);
             applicationRepository.saveAll(applicationRepositoryGenerator.create(2, seed));
 
             logger.info("Generated demo data");

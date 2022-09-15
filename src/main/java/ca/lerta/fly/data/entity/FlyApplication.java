@@ -3,7 +3,7 @@ package ca.lerta.fly.data.entity;
 import javax.persistence.Entity;
 
 @Entity
-public class Application extends AbstractEntity {
+public class FlyApplication extends AbstractEntity {
 
     private String name;
     private boolean nameOn;

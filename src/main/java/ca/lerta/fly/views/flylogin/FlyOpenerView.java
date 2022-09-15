@@ -2,19 +2,16 @@ package ca.lerta.fly.views.flylogin;
 
 import javax.annotation.security.PermitAll;
 
-import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.server.VaadinServletResponse;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -25,7 +22,6 @@ import ca.lerta.fly.views.apps.AppsView;
 
 @PageTitle("Login to Fly.io")
 @Route(value = "flylogin", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
 @PermitAll
 @AnonymousAllowed
 
@@ -47,19 +43,19 @@ public class FlyOpenerView extends Div {
                     VaadinServletResponse.getCurrent().getHttpServletResponse());
         });
         save.addClickListener(e -> {
-            new AuthenticationController().authenticate();
-            //Notification.show(binder.getBean().getClass().getSimpleName() + " stored.");
-            UI.getCurrent().navigate(AppsView.class);
-            MainLayout.getCurrent().recomputeDrawer();
+            new AuthenticationController().authenticate(() -> {
+                UI.getCurrent().navigate(AppsView.class);
+                MainLayout.getCurrent().recomputeDrawer();
+            });
         });
     }
 
     private Component createTitle() {
         Div div = new Div();
-        //H3 title = new H3("Connect to Fly.io");
-        Paragraph p = new Paragraph("Use the Connect button to go to the fly.io login page. If you do not have an account, you will be able to create one there");
+        Paragraph p = new Paragraph(
+                "Use the Connect button to go to the fly.io login page. If you do not have an account, you will be able to create one there");
         Paragraph p2 = new Paragraph("A new browser tab will open. After you have logged in, come back to this tab.");
-        div.add(/*title,*/ p, p2);
+        div.add(/* title, */ p, p2);
         return div;
     }
 

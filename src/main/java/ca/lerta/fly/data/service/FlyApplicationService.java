@@ -7,23 +7,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import ca.lerta.fly.data.entity.Application;
+import ca.lerta.fly.data.entity.FlyApplication;
 
 @Service
-public class ApplicationService {
+public class FlyApplicationService {
 
     private final ApplicationRepository repository;
 
     @Autowired
-    public ApplicationService(ApplicationRepository repository) {
+    public FlyApplicationService(ApplicationRepository repository) {
         this.repository = repository;
     }
 
-    public Optional<Application> get(UUID id) {
+    public Optional<FlyApplication> get(UUID id) {
         return repository.findById(id);
     }
 
-    public Application update(Application entity) {
+    public FlyApplication update(FlyApplication entity) {
         return repository.save(entity);
     }
 
@@ -31,7 +31,7 @@ public class ApplicationService {
         repository.deleteById(id);
     }
 
-    public Page<Application> list(Pageable pageable) {
+    public Page<FlyApplication> list(Pageable pageable) {
         return repository.findAll(pageable);
     }
 

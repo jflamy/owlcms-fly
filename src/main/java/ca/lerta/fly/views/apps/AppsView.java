@@ -21,6 +21,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
@@ -34,17 +35,24 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.server.VaadinServletRequest;
+import com.vaadin.flow.server.VaadinServletResponse;
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
-import ca.lerta.fly.data.entity.Application;
-import ca.lerta.fly.data.service.ApplicationService;
+import ca.lerta.fly.data.entity.FlyApplication;
+import ca.lerta.fly.data.service.FlyApplicationService;
+import ca.lerta.fly.security.AuthenticationController;
 import ca.lerta.fly.views.MainLayout;
 import ch.qos.logback.classic.Logger;
 
 @PageTitle("Fly.io owlcms Applications")
 @Route(value = "apps/:applicationID?/:action?(edit)", layout = MainLayout.class)
+@RouteAlias(value = "", layout = MainLayout.class)
 @PermitAll
+@AnonymousAllowed
 @Uses(Icon.class)
 
 public class AppsView extends Div implements BeforeEnterObserver {
@@ -53,7 +61,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private final String APPLICATION_ID = "applicationID";
     private final String APPLICATION_EDIT_ROUTE_TEMPLATE = "apps/%s/edit";
 
-    private Grid<Application> grid = new Grid<>(Application.class, false);
+    private Grid<FlyApplication> grid = new Grid<>(FlyApplication.class, false);
 
     private TextField name;
     private Checkbox nameOn;
@@ -63,99 +71,45 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private Button cancel = new Button("Cancel");
     private Button save = new Button("Save");
 
-    private BeanValidationBinder<Application> binder;
+    private BeanValidationBinder<FlyApplication> binder;
 
-    private Application application;
+    private FlyApplication flyApplication;
+    private final FlyApplicationService applicationService;
 
-    private final ApplicationService applicationService;
+    private UI ui;
+    private Dialog dialog;
+
+    private Button logout = new Button("Logout");
+    private Button login = new Button("Login");
+
+    private Paragraph waitingMsg = new Paragraph("Waiting for a successful fly.io login.");
 
     @Autowired
-    public AppsView(ApplicationService applicationService) {
-        this.applicationService = applicationService;
+    public AppsView(FlyApplicationService flyApplicationService) {
+        this.applicationService = flyApplicationService;
         addClassNames("apps-view");
 
         // Create UI
         SplitLayout splitLayout = new SplitLayout();
-
         createGridLayout(splitLayout);
         createEditorLayout(splitLayout);
-
         add(splitLayout);
 
         // Configure Grid
-        grid.addColumn("name").setAutoWidth(true);
-        LitRenderer<Application> nameOnRenderer = LitRenderer.<Application>of(
-                "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
-                .withProperty("icon", nameOn -> nameOn.isNameOn() ? "check" : "minus").withProperty("color",
-                        nameOn -> nameOn.isNameOn()
-                                ? "var(--lumo-primary-text-color)"
-                                : "var(--lumo-disabled-text-color)");
-
-        grid.addColumn(nameOnRenderer).setHeader("Name On").setAutoWidth(true);
-
-        grid.addColumn("results").setAutoWidth(true);
-        LitRenderer<Application> resultsOnRenderer = LitRenderer.<Application>of(
-                "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
-                .withProperty("icon", resultsOn -> resultsOn.isResultsOn() ? "check" : "minus").withProperty("color",
-                        resultsOn -> resultsOn.isResultsOn()
-                                ? "var(--lumo-primary-text-color)"
-                                : "var(--lumo-disabled-text-color)");
-
-        grid.addColumn(resultsOnRenderer).setHeader("Results On").setAutoWidth(true);
-
-        grid.setItems(query -> applicationService.list(
-                PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
-                .stream());
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
-
-        // when a row is selected or deselected, populate form
-        grid.asSingleSelect().addValueChangeListener(event -> {
-            if (event.getValue() != null) {
-                UI.getCurrent().navigate(String.format(APPLICATION_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
-            } else {
-                clearForm();
-                UI.getCurrent().navigate(AppsView.class);
-            }
-        });
+        configureGrid(flyApplicationService);
 
         // Configure Form
-        binder = new BeanValidationBinder<>(Application.class);
-
-        // Bind fields. This is where you'd define e.g. validation rules
-
+        binder = new BeanValidationBinder<>(FlyApplication.class);
         binder.bindInstanceFields(this);
 
-        cancel.addClickListener(e -> {
-            clearForm();
-            refreshGrid();
-        });
-
-        save.addClickListener(e -> {
-            try {
-                if (this.application == null) {
-                    this.application = new Application();
-                }
-                binder.writeBean(this.application);
-                applicationService.update(this.application);
-                clearForm();
-                refreshGrid();
-                Notification.show("Application details stored.");
-                UI.getCurrent().navigate(AppsView.class);
-            } catch (ValidationException validationException) {
-                Notification.show("An exception happened while trying to store the application details.");
-            }
-        });
-
+        // Buttons
+        configureButtons(flyApplicationService);
     }
-
-    UI ui;
-    Dialog notif;
 
     @Override
     public void onAttach(AttachEvent e) {
         ui = UI.getCurrent();
-        notif = new Dialog(new Paragraph("Waiting for a successful fly.io login."));
-        notif.setModal(true);
+        configureDialog();
         new Thread(() -> {
             String[] token = new String[1];
             while (token[0] == null) {
@@ -166,7 +120,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
                 });
                 logger.warn("outside session access token {}", token[0]);
                 if (token[0] == null) {
-                    openNotification(token[0]);
+                    openDialog(token[0]);
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e1) {
@@ -182,17 +136,23 @@ public class AppsView extends Div implements BeforeEnterObserver {
         }).start();
     }
 
-    private void openNotification(String token) {
-        ui.access(() -> {
-            logger.warn("opening {} since token {}", notif, token);
-            notif.open();
+    private void configureDialog() {
+        UI ui = UI.getCurrent();
+        MainLayout mainLayout = MainLayout.getCurrent();
+        dialog = new Dialog(dialogInitialText());
+        dialog.setModal(true);
+        dialog.getHeader().add(new H3("Connect to Fly.io"));
+        dialog.getFooter().add(login, logout);
+        logout.addClickListener(e -> {
+            new AuthenticationController().logout(
+                    VaadinServletRequest.getCurrent().getHttpServletRequest(),
+                    VaadinServletResponse.getCurrent().getHttpServletResponse());
         });
-    }
-
-    private void closeNotification(String token) {
-        ui.access(() -> {
-            logger.warn("closing {} since token {}", notif, token);
-            notif.close();
+        login.addClickListener(e -> {
+            new AuthenticationController().authenticate(() -> {
+                ui.navigate(AppsView.class);
+                mainLayout.recomputeDrawer();
+            });
         });
     }
 
@@ -200,7 +160,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
     public void beforeEnter(BeforeEnterEvent event) {
         Optional<UUID> applicationId = event.getRouteParameters().get(APPLICATION_ID).map(UUID::fromString);
         if (applicationId.isPresent()) {
-            Optional<Application> applicationFromBackend = applicationService.get(applicationId.get());
+            Optional<FlyApplication> applicationFromBackend = applicationService.get(applicationId.get());
             if (applicationFromBackend.isPresent()) {
                 populateForm(applicationFromBackend.get());
             } else {
@@ -213,6 +173,81 @@ public class AppsView extends Div implements BeforeEnterObserver {
                 event.forwardTo(AppsView.class);
             }
         }
+    }
+
+    private void configureButtons(FlyApplicationService flyApplicationService) {
+        cancel.addClickListener(e -> {
+            clearForm();
+            refreshGrid();
+        });
+
+        save.addClickListener(e -> {
+            try {
+                if (this.flyApplication == null) {
+                    this.flyApplication = new FlyApplication();
+                }
+                binder.writeBean(this.flyApplication);
+                flyApplicationService.update(this.flyApplication);
+                clearForm();
+                refreshGrid();
+                Notification.show("Fly Application details stored.");
+                UI.getCurrent().navigate(AppsView.class);
+            } catch (ValidationException validationException) {
+                Notification.show("An exception happened while trying to store the application details.");
+            }
+        });
+    }
+
+    private void configureGrid(FlyApplicationService flyApplicationService) {
+        // Configure Grid
+        grid.addColumn("name").setAutoWidth(true);
+        LitRenderer<FlyApplication> nameOnRenderer = LitRenderer.<FlyApplication>of(
+                "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
+                .withProperty("icon", nameOn -> nameOn.isNameOn() ? "check" : "minus").withProperty("color",
+                        nameOn -> nameOn.isNameOn()
+                                ? "var(--lumo-primary-text-color)"
+                                : "var(--lumo-disabled-text-color)");
+
+        grid.addColumn(nameOnRenderer).setHeader("Name On").setAutoWidth(true);
+
+        grid.addColumn("results").setAutoWidth(true);
+        LitRenderer<FlyApplication> resultsOnRenderer = LitRenderer.<FlyApplication>of(
+                "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
+                .withProperty("icon", resultsOn -> resultsOn.isResultsOn() ? "check" : "minus").withProperty("color",
+                        resultsOn -> resultsOn.isResultsOn()
+                                ? "var(--lumo-primary-text-color)"
+                                : "var(--lumo-disabled-text-color)");
+
+        grid.addColumn(resultsOnRenderer).setHeader("Results On").setAutoWidth(true);
+
+        grid.setItems(query -> flyApplicationService.list(
+                PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
+                .stream());
+        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
+
+        // when a row is selected or deselected, populate form
+        grid.asSingleSelect().addValueChangeListener(event -> {
+            if (event.getValue() != null) {
+                UI.getCurrent().navigate(String.format(APPLICATION_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+            } else {
+                clearForm();
+                UI.getCurrent().navigate(AppsView.class);
+            }
+        });
+    }
+
+    private void openDialog(String token) {
+        ui.access(() -> {
+            logger.warn("opening {} since token {}", dialog, token);
+            dialog.open();
+        });
+    }
+
+    private void closeNotification(String token) {
+        ui.access(() -> {
+            logger.warn("closing {} since token {}", dialog, token);
+            dialog.close();
+        });
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
@@ -263,9 +298,19 @@ public class AppsView extends Div implements BeforeEnterObserver {
         populateForm(null);
     }
 
-    private void populateForm(Application value) {
-        this.application = value;
-        binder.readBean(this.application);
+    private void populateForm(FlyApplication value) {
+        this.flyApplication = value;
+        binder.readBean(this.flyApplication);
 
+    }
+
+    private Component dialogInitialText() {
+        Div div = new Div();
+        Paragraph p1 = new Paragraph(
+                "Use the Login button to go to the fly.io login page. If you do not have an account, you will be able to create one from there");
+        Paragraph p2 = new Paragraph(
+                "Fly.io will open in another browser tab. Once you have logged in, you can close the fly.io tab and come back here.");
+        div.add(/* title, */ p1, p2);
+        return div;
     }
 }
