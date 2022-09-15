@@ -1,21 +1,31 @@
 package ca.lerta.fly.views.apps;
 
-import ca.lerta.fly.data.entity.Application;
-import ca.lerta.fly.data.service.ApplicationService;
-import ca.lerta.fly.views.MainLayout;
+import java.util.Optional;
+import java.util.UUID;
 
+import javax.annotation.security.PermitAll;
+
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.Uses;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -26,12 +36,13 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
-import java.util.Optional;
-import java.util.UUID;
-import javax.annotation.security.PermitAll;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+
+import ca.lerta.fly.data.entity.Application;
+import ca.lerta.fly.data.service.ApplicationService;
+import ca.lerta.fly.views.MainLayout;
+import ch.qos.logback.classic.Logger;
 
 @PageTitle("Fly.io owlcms Applications")
 @Route(value = "apps/:applicationID?/:action?(edit)", layout = MainLayout.class)
@@ -39,6 +50,7 @@ import org.springframework.data.domain.PageRequest;
 @Uses(Icon.class)
 
 public class AppsView extends Div implements BeforeEnterObserver {
+    Logger logger = (Logger) LoggerFactory.getLogger(AppsView.class);
 
     private final String APPLICATION_ID = "applicationID";
     private final String APPLICATION_EDIT_ROUTE_TEMPLATE = "apps/%s/edit";
@@ -138,6 +150,55 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
     }
 
+    UI ui;
+    Dialog notif;
+
+    @Override
+    public void onAttach(AttachEvent e) {
+        ui = UI.getCurrent();
+        notif = new Dialog(new Paragraph("Waiting for a successful fly.io login."));
+        notif.setVisible(false);
+        notif.setModal(true);
+        new Thread(() -> {
+            String[] token = new String[1];
+            while (token[0] == null) {
+                VaadinSession session = e.getUI().getSession();
+                session.access(() -> {
+                    token[0] = (String) session.getAttribute("ACCESS_TOKEN");
+                    logger.warn("inside session {} access token {}", session, token[0]);
+                });
+                logger.warn("outside session access token {}", token[0]);
+                if (token[0] == null) {
+                    openNotification(token[0]);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e1) {
+                        System.err.println("interrupted");
+                    }
+                } else {
+                    System.err.println("closing");
+                    closeNotification(token[0]);
+                    System.err.println("closed");
+                }
+
+            }
+        }).start();
+    }
+
+    private void openNotification(String token) {
+        ui.access(() -> {
+            logger.warn("opening {} since token {}", notif, token);
+            notif.setVisible(true);
+        });
+    }
+
+    private void closeNotification(String token) {
+        ui.access(() -> {
+            logger.warn("closing {} since token {}", notif, token);
+            notif.setVisible(false);
+        });
+    }
+
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         Optional<UUID> applicationId = event.getRouteParameters().get(APPLICATION_ID).map(UUID::fromString);
@@ -170,7 +231,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
         nameOn = new Checkbox("Name On");
         results = new TextField("Results");
         resultsOn = new Checkbox("Results On");
-        Component[] fields = new Component[]{name, nameOn, results, resultsOn};
+        Component[] fields = new Component[] { name, nameOn, results, resultsOn };
 
         formLayout.add(fields);
         editorDiv.add(formLayout);

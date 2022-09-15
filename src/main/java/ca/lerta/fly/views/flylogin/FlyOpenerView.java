@@ -45,9 +45,7 @@ public class FlyOpenerView extends Div {
                     VaadinServletResponse.getCurrent().getHttpServletResponse());
         });
         save.addClickListener(e -> {
-            new AuthenticationController().authenticate("user", "user",
-                    VaadinServletRequest.getCurrent().getHttpServletRequest(),
-                    VaadinServletResponse.getCurrent().getHttpServletResponse());
+            new AuthenticationController().authenticate();
             //Notification.show(binder.getBean().getClass().getSimpleName() + " stored.");
             UI.getCurrent().navigate(AppsView.class);
             MainLayout.getCurrent().recomputeDrawer();

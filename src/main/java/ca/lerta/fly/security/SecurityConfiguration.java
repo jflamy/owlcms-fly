@@ -6,6 +6,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -34,15 +35,16 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity web) throws Exception {
         super.configure(web);
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
         web.ignoring().antMatchers("/images/*.png");
     }
 
     @Override
     @Bean
-    @SuppressWarnings( "deprecation" )
+    @SuppressWarnings("deprecation")
     // deprecated because Vaadin adapter extends deprecated class
     public AuthenticationManager authenticationManagerBean() throws Exception {
-        System.err.println("authenticationManagerBean "+super.authenticationManagerBean().toString());
+        System.err.println("authenticationManagerBean " + super.authenticationManagerBean().toString());
         authenticationManagerBean = super.authenticationManagerBean();
         return super.authenticationManagerBean();
     }
