@@ -1,7 +1,9 @@
 # owlcms-fly
 
-This project can be used as a starting point to create your own Vaadin application with Spring Boot.
-It contains all the necessary configuration and some placeholder files to get you started.
+This program is used to deploy owlcms on fly.io without having to install the fly command-line interface.
+
+A token is requested from fly.io through their login web page.  Once the token is acquired, commands are run on the user's behalf.
+The token is kept only for the duration of the session and not stored anywhere.
 
 ## Running the application
 
