@@ -82,8 +82,6 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private Button logout = new Button("Logout");
     private Button login = new Button("Login");
 
-    private Paragraph waitingMsg = new Paragraph("Waiting for a successful fly.io login.");
-
     @Autowired
     public AppsView(FlyApplicationService flyApplicationService) {
         this.applicationService = flyApplicationService;

@@ -59,6 +59,7 @@ public class MainLayout extends AppLayout {
         addToNavbar(true, createHeaderContent());
         drawer = createDrawerContent();
         addToDrawer(drawer);
+        setDrawerOpened(false);
         current = this;
     }
 
