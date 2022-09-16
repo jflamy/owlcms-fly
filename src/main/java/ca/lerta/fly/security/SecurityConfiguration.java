@@ -12,11 +12,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.vaadin.flow.spring.security.VaadinWebSecurityConfigurerAdapter;
 
-import ca.lerta.fly.views.flylogin.FlyOpenerView;
+import ca.lerta.fly.views.apps.AppsView;
 
 @EnableWebSecurity
 @Configuration
+@SuppressWarnings("deprecation")
 public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
+    //TODO: replace with VaadinWebSecurity, exposing custom AuthenticationManager 
 
     public static final String LOGOUT_URL = "/";
     static AuthenticationManager authenticationManagerBean;
@@ -29,7 +31,7 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
-        setLoginView(http, FlyOpenerView.class, LOGOUT_URL);
+        setLoginView(http, AppsView.class, LOGOUT_URL);
     }
 
     @Override
@@ -41,8 +43,6 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
 
     @Override
     @Bean
-    @SuppressWarnings("deprecation")
-    // deprecated because Vaadin adapter extends deprecated class
     public AuthenticationManager authenticationManagerBean() throws Exception {
         System.err.println("authenticationManagerBean " + super.authenticationManagerBean().toString());
         authenticationManagerBean = super.authenticationManagerBean();

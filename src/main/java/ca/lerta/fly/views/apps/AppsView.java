@@ -136,7 +136,8 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
     private void configureDialog() {
         UI ui = UI.getCurrent();
-        MainLayout mainLayout = MainLayout.getCurrent();
+        // MainLayout mainLayout = MainLayout.getCurrent();
+        
         Component dialogInitialText = dialogInitialText();
         dialog = new Dialog(dialogInitialText);
         dialog.setModal(true);

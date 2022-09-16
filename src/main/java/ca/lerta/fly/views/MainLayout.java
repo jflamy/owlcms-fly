@@ -25,7 +25,6 @@ import ca.lerta.fly.data.entity.User;
 import ca.lerta.fly.security.AuthenticatedUser;
 import ca.lerta.fly.views.about.AboutView;
 import ca.lerta.fly.views.apps.AppsView;
-import ca.lerta.fly.views.flylogin.FlyOpenerView;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -101,15 +100,10 @@ public class MainLayout extends AppLayout {
         AppNav nav = new AppNav();
         nav.addClassNames("app-nav");
 
-        if (accessChecker.hasAccess(FlyOpenerView.class)) {
-            nav.addItem(new AppNavItem("Login", FlyOpenerView.class, "lab la-fly"));
-        }
         if (accessChecker.hasAccess(AppsView.class)) {
             nav.addItem(new AppNavItem("Apps", AppsView.class, "la la-columns"));
         }
-        // if (accessChecker.hasAccess(CreditCardFormView.class)) {
-        //     nav.addItem(new AppNavItem("Credit Card Form", CreditCardFormView.class, "la la-credit-card"));
-        // }
+
         if (accessChecker.hasAccess(AboutView.class)) {
             nav.addItem(new AppNavItem("About", AboutView.class, "la la-file"));
         }
