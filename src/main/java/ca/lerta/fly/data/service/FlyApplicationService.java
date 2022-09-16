@@ -6,17 +6,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.SessionScope;
 
 import ca.lerta.fly.data.entity.FlyApplication;
+import ca.lerta.fly.inmemory.InMemoryJpaRepository;
+import ca.lerta.fly.inmemory.UUIDPrimaryKeyGenerator;
 
 @Service
+@SessionScope
+/**
+ * In-memory version.  One per session so different simultaneous users don't see
+ * each others's applications.
+ */
 public class FlyApplicationService {
 
-    private final ApplicationRepository repository;
+    private final FlyApplicationRepository repository;
 
     @Autowired
-    public FlyApplicationService(ApplicationRepository repository) {
-        this.repository = repository;
+    public FlyApplicationService(FlyApplicationRepository repository) {
+        System.err.println("******* FlyApplicationService *******");
+        this.repository = new FlyApplicationRepository();
     }
 
     public Optional<FlyApplication> get(UUID id) {

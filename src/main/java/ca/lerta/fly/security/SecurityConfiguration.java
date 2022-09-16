@@ -16,6 +16,7 @@ import ca.lerta.fly.views.flylogin.FlyOpenerView;
 
 @EnableWebSecurity
 @Configuration
+@SuppressWarnings("deprecation")
 public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
 
     public static final String LOGOUT_URL = "/";
@@ -41,7 +42,6 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
 
     @Override
     @Bean
-    @SuppressWarnings("deprecation")
     // deprecated because Vaadin adapter extends deprecated class
     public AuthenticationManager authenticationManagerBean() throws Exception {
         System.err.println("authenticationManagerBean " + super.authenticationManagerBean().toString());

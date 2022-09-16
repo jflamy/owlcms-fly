@@ -7,7 +7,7 @@ import com.vaadin.flow.spring.annotation.SpringComponent;
 import ca.lerta.fly.data.Role;
 import ca.lerta.fly.data.entity.FlyApplication;
 import ca.lerta.fly.data.entity.User;
-import ca.lerta.fly.data.service.ApplicationRepository;
+import ca.lerta.fly.data.service.FlyApplicationRepository;
 import ca.lerta.fly.data.service.UserRepository;
 
 import java.time.LocalDateTime;
@@ -26,7 +26,7 @@ public class DataGenerator {
 
     @Bean
     public CommandLineRunner loadData(PasswordEncoder passwordEncoder, ApplicationContext ctx,
-            UserRepository userRepository, ApplicationRepository applicationRepository) {
+            UserRepository userRepository, FlyApplicationRepository applicationRepository) {
         return args -> {
             Logger logger = LoggerFactory.getLogger(getClass());
             if (userRepository.count() != 0L) {
