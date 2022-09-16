@@ -112,10 +112,10 @@ public class AppsView extends Div implements BeforeEnterObserver {
             String[] token = new String[1];
             while (token[0] == null) {
                 VaadinSession session = e.getUI().getSession();
-                session.access(() -> {
-                    token[0] = (String) session.getAttribute("ACCESS_TOKEN");
-                    logger.warn("inside session {} access token {}", session, token[0]);
-                });
+                    session.accessSynchronously(() -> {
+                        token[0] = (String) session.getAttribute("ACCESS_TOKEN");
+                        logger.warn("inside session {} access token {}", session, token[0]);
+                    });
                 logger.warn("outside session access token {}", token[0]);
                 if (token[0] == null) {
                     openDialog(token[0]);
@@ -126,7 +126,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
                     }
                 } else {
                     System.err.println("closing");
-                    closeNotification(token[0]);
+                    closeDialog(token[0]);
                     System.err.println("closed");
                 }
 
@@ -136,7 +136,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
     private void configureDialog() {
         UI ui = UI.getCurrent();
-        //MainLayout mainLayout = MainLayout.getCurrent();
+        // MainLayout mainLayout = MainLayout.getCurrent();
         Component dialogInitialText = dialogInitialText();
         dialog = new Dialog(dialogInitialText);
         dialog.setModal(true);
@@ -152,8 +152,8 @@ public class AppsView extends Div implements BeforeEnterObserver {
             dialog.add(new Paragraph("Waiting for fly.io login to have been completed."));
             new AuthenticationController().authenticate(() -> {
                 ui.access(() -> {
-                // ui.navigate(AppsView.class);
-                // mainLayout.recomputeDrawer();
+                    // ui.navigate(AppsView.class);
+                    // mainLayout.recomputeDrawer();
                 });
             });
         });
@@ -246,7 +246,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
         });
     }
 
-    private void closeNotification(String token) {
+    private void closeDialog(String token) {
         ui.access(() -> {
             logger.warn("closing {} since token {}", dialog, token);
             dialog.close();
