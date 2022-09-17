@@ -43,7 +43,6 @@ public class InMemoryJpaRepository<T, ID extends Serializable & Comparable<ID>> 
     }
 
     public void setPrimaryKeyGenerator(PrimaryKeyGenerator<ID> primaryKeyGenerator) {
-        System.err.println("&&&&&&&&&&&&&&&&&& setting "+primaryKeyGenerator);
         this.primaryKeyGenerator = primaryKeyGenerator;
     }
 

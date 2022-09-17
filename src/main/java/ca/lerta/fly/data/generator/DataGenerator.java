@@ -1,25 +1,22 @@
 package ca.lerta.fly.data.generator;
 
-import com.vaadin.exampledata.DataType;
-import com.vaadin.exampledata.ExampleDataGenerator;
-import com.vaadin.flow.spring.annotation.SpringComponent;
-
-import ca.lerta.fly.data.Role;
-import ca.lerta.fly.data.entity.FlyApplication;
-import ca.lerta.fly.data.entity.User;
-import ca.lerta.fly.data.service.FlyApplicationRepository;
-import ca.lerta.fly.data.service.UserRepository;
-
-import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.vaadin.flow.spring.annotation.SpringComponent;
+
+import ca.lerta.fly.data.Role;
+import ca.lerta.fly.data.entity.User;
+import ca.lerta.fly.data.service.FlyApplicationRepository;
+import ca.lerta.fly.data.service.UserRepository;
 
 @SpringComponent
 public class DataGenerator {
@@ -33,7 +30,6 @@ public class DataGenerator {
                 logger.info("Using existing database");
                 return;
             }
-            int seed = 123;
 
             logger.info("Generating demo data");
 

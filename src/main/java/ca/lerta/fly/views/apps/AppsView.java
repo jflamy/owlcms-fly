@@ -7,7 +7,6 @@ import javax.annotation.security.PermitAll;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
@@ -40,9 +39,9 @@ import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.server.VaadinServletResponse;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import ca.lerta.fly.data.entity.FlyApplication;
+import ca.lerta.fly.data.service.FlyApplicationRepository;
 import ca.lerta.fly.data.service.FlyApplicationService;
 import ca.lerta.fly.security.AuthenticationController;
 import ca.lerta.fly.views.MainLayout;
@@ -55,6 +54,16 @@ import ch.qos.logback.classic.Logger;
 @AnonymousAllowed
 @Uses(Icon.class)
 
+/**
+ * Show users own applications.
+ * 
+ * Quirky implementation - the table is stored in a repository stored in the
+ * session. Because we update from background threads, much of the Spring
+ * service magic does not work.
+ * 
+ * So we use the battle-tested direct to repo approach. And we don't need paging
+ * either.
+ */
 public class AppsView extends Div implements BeforeEnterObserver {
     Logger logger = (Logger) LoggerFactory.getLogger(AppsView.class);
 
@@ -74,7 +83,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private BeanValidationBinder<FlyApplication> binder;
 
     private FlyApplication flyApplication;
-    private final FlyApplicationService applicationService;
+    private final FlyApplicationService flyApplicationService;
 
     private UI ui;
     private Dialog dialog;
@@ -82,9 +91,11 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private Button logout = new Button("Logout");
     private Button login = new Button("Login");
 
+    private FlyApplicationRepository flyApplicationRepository;
+
     @Autowired
     public AppsView(FlyApplicationService flyApplicationService) {
-        this.applicationService = flyApplicationService;
+        this.flyApplicationService = flyApplicationService;
         addClassNames("apps-view");
 
         // Create UI
@@ -108,30 +119,39 @@ public class AppsView extends Div implements BeforeEnterObserver {
     public void onAttach(AttachEvent e) {
         ui = UI.getCurrent();
         configureDialog();
+        flyApplicationRepository = flyApplicationService.getRepository();
         new Thread(() -> {
             String[] token = new String[1];
             while (token[0] == null) {
                 VaadinSession session = e.getUI().getSession();
-                    session.accessSynchronously(() -> {
-                        token[0] = (String) session.getAttribute("ACCESS_TOKEN");
-                        logger.warn("inside session {} access token {}", session, token[0]);
-                    });
-                logger.warn("outside session access token {}", token[0]);
+                session.accessSynchronously(() -> {
+                    token[0] = (String) session.getAttribute("ACCESS_TOKEN");
+                    logger.debug("inside session {} access token {}", session, token[0]);
+                });
+                logger.debug("outside session access token {}", token[0]);
                 if (token[0] == null) {
                     openDialog(token[0]);
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e1) {
-                        System.err.println("interrupted");
                     }
                 } else {
-                    System.err.println("closing");
                     closeDialog(token[0]);
-                    System.err.println("closed");
+                    loadRepository(flyApplicationRepository);
+                    ui.access(() -> {
+                        populateGrid(flyApplicationRepository);
+                        refreshGrid();
+                    });
                 }
-
             }
         }).start();
+    }
+
+    private void loadRepository(FlyApplicationRepository repository) {
+        FlyApplication fa = new FlyApplication();
+        fa.setName("test1");
+        fa.setNameOn(false);
+        repository.save(fa);
     }
 
     private void configureDialog() {
@@ -152,6 +172,8 @@ public class AppsView extends Div implements BeforeEnterObserver {
             dialog.add(new Paragraph("Waiting for fly.io login to have been completed."));
             new AuthenticationController().authenticate(() -> {
                 ui.access(() -> {
+                    // provide UI feedback if needed.
+
                     // ui.navigate(AppsView.class);
                     // mainLayout.recomputeDrawer();
                 });
@@ -163,7 +185,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
     public void beforeEnter(BeforeEnterEvent event) {
         Optional<UUID> applicationId = event.getRouteParameters().get(APPLICATION_ID).map(UUID::fromString);
         if (applicationId.isPresent()) {
-            Optional<FlyApplication> applicationFromBackend = applicationService.get(applicationId.get());
+            Optional<FlyApplication> applicationFromBackend = flyApplicationService.get(applicationId.get());
             if (applicationFromBackend.isPresent()) {
                 populateForm(applicationFromBackend.get());
             } else {
@@ -223,9 +245,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
         grid.addColumn(resultsOnRenderer).setHeader("Results On").setAutoWidth(true);
 
-        grid.setItems(query -> flyApplicationService.list(
-                PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
-                .stream());
+        populateGrid(flyApplicationService.getRepository());
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
         // when a row is selected or deselected, populate form
@@ -237,6 +257,14 @@ public class AppsView extends Div implements BeforeEnterObserver {
                 UI.getCurrent().navigate(AppsView.class);
             }
         });
+    }
+
+    private void populateGrid(FlyApplicationRepository flyApplicationRepository) {
+        // grid.setItems(query -> flyApplicationRepository.list(
+        // PageRequest.of(query.getPage(), query.getPageSize(),
+        // VaadinSpringDataHelpers.toSpringDataSort(query)))
+        // .stream());
+        grid.setItems(flyApplicationRepository.findAll());
     }
 
     private void openDialog(String token) {
@@ -294,7 +322,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
     private void refreshGrid() {
         grid.select(null);
-        grid.getLazyDataView().refreshAll();
+        grid.getListDataView().refreshAll();
     }
 
     private void clearForm() {
