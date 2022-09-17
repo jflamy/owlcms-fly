@@ -81,7 +81,7 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <!-- Replace artifactId with vaadin-core to use only free components -->
-            <artifactId>vaadin</artifactId>
+            <artifactId>vaadin-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.vaadin</groupId>
@@ -146,6 +146,12 @@
             <version>5.1.1</version>
             <scope>test</scope>
         </dependency>
+<!-- https://mvnrepository.com/artifact/net.thisptr/jackson-jq -->
+<dependency>
+    <groupId>net.thisptr</groupId>
+    <artifactId>jackson-jq</artifactId>
+    <version>1.0.0-preview.20220705</version>
+</dependency>
     </dependencies>
 
     <build>

@@ -1,13 +1,23 @@
 package ca.lerta.fly.views.apps;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -40,12 +50,16 @@ import com.vaadin.flow.server.VaadinServletResponse;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+import ca.lerta.fly.Application;
 import ca.lerta.fly.data.entity.FlyApplication;
 import ca.lerta.fly.data.service.FlyApplicationRepository;
 import ca.lerta.fly.data.service.FlyApplicationService;
 import ca.lerta.fly.security.AuthenticationController;
 import ca.lerta.fly.views.MainLayout;
 import ch.qos.logback.classic.Logger;
+import net.thisptr.jackson.jq.JsonQuery;
+import net.thisptr.jackson.jq.Scope;
+import net.thisptr.jackson.jq.Versions;
 
 @PageTitle("Fly.io owlcms Applications")
 @Route(value = "apps/:applicationID?/:action?(edit)", layout = MainLayout.class)
@@ -93,6 +107,9 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
     private FlyApplicationRepository flyApplicationRepository;
 
+    private String accessToken;
+    private final ObjectMapper mapper = new ObjectMapper();
+
     @Autowired
     public AppsView(FlyApplicationService flyApplicationService) {
         this.flyApplicationService = flyApplicationService;
@@ -129,6 +146,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
                     logger.debug("inside session {} access token {}", session, token[0]);
                 });
                 logger.debug("outside session access token {}", token[0]);
+                accessToken = token[0];
                 if (token[0] == null) {
                     openDialog(token[0]);
                     try {
@@ -148,10 +166,47 @@ public class AppsView extends Div implements BeforeEnterObserver {
     }
 
     private void loadRepository(FlyApplicationRepository repository) {
-        FlyApplication fa = new FlyApplication();
-        fa.setName("test1");
-        fa.setNameOn(false);
-        repository.save(fa);
+        var processBuilder = new ProcessBuilder();
+
+        String json = getAppsJson(processBuilder);
+        List<JsonNode> appData = filterApps(json);
+        for (JsonNode node: appData) {
+            Map<String, Object> result = mapper.convertValue(node, new TypeReference<Map<String, Object>>(){});
+            FlyApplication fa = new FlyApplication();
+            fa.setName((String) result.get("name"));
+            fa.setNameOn(((String) result.get("status")).contentEquals("running"));
+            repository.save(fa);
+        }
+
+
+    }
+
+    private List<JsonNode> filterApps(String json) {
+        try {
+            Scope rootScope = Application.rootJqScope;
+            JsonQuery q = JsonQuery.compile(".[] | select(.Organization.Slug == \"personal\") | {name: .Name, status: .Status, org: .Organization.Slug }", Versions.JQ_1_6);
+            JsonNode in = mapper.readTree(json);
+            final List<JsonNode> out = new ArrayList<>();
+            q.apply(Scope.newChildScope(rootScope), in, out::add);
+            System.out.println(out);
+            return out;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String getAppsJson(ProcessBuilder processBuilder) {
+        String json = "";
+        processBuilder.command("flyctl", "apps", "list", "-j", "-t", accessToken);
+        try {
+            var process = processBuilder.start();
+            try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                json = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            }
+        } catch (Exception e) {
+            // ignored
+        }
+        return json;
     }
 
     private void configureDialog() {

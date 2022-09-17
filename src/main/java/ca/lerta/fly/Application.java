@@ -11,6 +11,10 @@ import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
+import net.thisptr.jackson.jq.BuiltinFunctionLoader;
+import net.thisptr.jackson.jq.Scope;
+import net.thisptr.jackson.jq.Versions;
+
 /**
  * The entry point of the Spring Boot application.
  *
@@ -25,9 +29,18 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @NpmPackage(value = "@vaadin-component-factory/vcf-nav", version = "1.0.6")
 @Push
 public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
+    public static Scope rootJqScope = null;
 
     public static void main(String[] args) {
+        initJacksonJq();
         SpringApplication.run(Application.class, args);
+    }
+
+    private static void initJacksonJq() {
+        // a Scope is a container of built-in/user-defined functions and variables.
+        rootJqScope = Scope.newEmptyScope();
+        // BuiltinFunctionLoader loads built-in functions from the classpath.
+        BuiltinFunctionLoader.getInstance().loadFunctions(Versions.JQ_1_6, rootJqScope);
     }
 
 }
