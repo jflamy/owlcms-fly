@@ -107,9 +107,6 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(AppsView.class)) {
             nav.addItem(new AppNavItem("Apps", AppsView.class, "la la-columns"));
         }
-        // if (accessChecker.hasAccess(CreditCardFormView.class)) {
-        //     nav.addItem(new AppNavItem("Credit Card Form", CreditCardFormView.class, "la la-credit-card"));
-        // }
         if (accessChecker.hasAccess(AboutView.class)) {
             nav.addItem(new AppNavItem("About", AboutView.class, "la la-file"));
         }

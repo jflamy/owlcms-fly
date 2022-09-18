@@ -7,6 +7,9 @@ import javax.annotation.security.PermitAll;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
@@ -44,6 +47,7 @@ import ca.lerta.fly.data.entity.FlyApplication;
 import ca.lerta.fly.data.service.FlyApplicationRepository;
 import ca.lerta.fly.data.service.FlyApplicationService;
 import ca.lerta.fly.security.AuthenticationController;
+import ca.lerta.fly.security.SecurityConfiguration;
 import ca.lerta.fly.views.MainLayout;
 import ch.qos.logback.classic.Logger;
 
@@ -73,9 +77,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private Grid<FlyApplication> grid = new Grid<>(FlyApplication.class, false);
 
     private TextField name;
-    private Checkbox nameOn;
-    private TextField results;
-    private Checkbox resultsOn;
+    private Checkbox running;
 
     private Button cancel = new Button("Cancel");
     private Button save = new Button("Save");
@@ -94,13 +96,15 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private FlyApplicationRepository flyApplicationRepository;
     private String accessToken;
 
+    private SplitLayout splitLayout;
+
     @Autowired
     public AppsView(FlyApplicationService flyApplicationService) {
         this.flyApplicationService = flyApplicationService;
         addClassNames("apps-view");
 
         // Create UI
-        SplitLayout splitLayout = new SplitLayout();
+        splitLayout = new SplitLayout();
         createGridLayout(splitLayout);
         createEditorLayout(splitLayout);
         add(splitLayout);
@@ -221,24 +225,15 @@ public class AppsView extends Div implements BeforeEnterObserver {
     private void configureGrid(FlyApplicationService flyApplicationService) {
         // Configure Grid
         grid.addColumn("name").setAutoWidth(true);
-        LitRenderer<FlyApplication> nameOnRenderer = LitRenderer.<FlyApplication>of(
+        LitRenderer<FlyApplication> runningRenderer = LitRenderer.<FlyApplication>of(
                 "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
-                .withProperty("icon", nameOn -> nameOn.isNameOn() ? "check" : "minus").withProperty("color",
-                        nameOn -> nameOn.isNameOn()
+                .withProperty("icon", running -> running.isRunning() ? "check" : "minus").withProperty("color",
+                        running -> running.isRunning()
                                 ? "var(--lumo-primary-text-color)"
                                 : "var(--lumo-disabled-text-color)");
 
-        grid.addColumn(nameOnRenderer).setHeader("Name On").setAutoWidth(true);
-
-        grid.addColumn("results").setAutoWidth(true);
-        LitRenderer<FlyApplication> resultsOnRenderer = LitRenderer.<FlyApplication>of(
-                "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
-                .withProperty("icon", resultsOn -> resultsOn.isResultsOn() ? "check" : "minus").withProperty("color",
-                        resultsOn -> resultsOn.isResultsOn()
-                                ? "var(--lumo-primary-text-color)"
-                                : "var(--lumo-disabled-text-color)");
-
-        grid.addColumn(resultsOnRenderer).setHeader("Results On").setAutoWidth(true);
+        grid.addColumn(runningRenderer).setHeader("Status").setAutoWidth(true);
+        grid.addColumn("bundle").setAutoWidth(true);
 
         populateGrid(flyApplicationService.getRepository());
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
@@ -252,6 +247,7 @@ public class AppsView extends Div implements BeforeEnterObserver {
                 UI.getCurrent().navigate(AppsView.class);
             }
         });
+        clearForm();
     }
 
     private void populateGrid(FlyApplicationRepository flyApplicationRepository) {
@@ -286,10 +282,8 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
         FormLayout formLayout = new FormLayout();
         name = new TextField("Name");
-        nameOn = new Checkbox("Name On");
-        results = new TextField("Results");
-        resultsOn = new Checkbox("Results On");
-        Component[] fields = new Component[] { name, nameOn, results, resultsOn };
+        running = new Checkbox("Running");
+        Component[] fields = new Component[] { name, running };
 
         formLayout.add(fields);
         editorDiv.add(formLayout);
@@ -312,7 +306,11 @@ public class AppsView extends Div implements BeforeEnterObserver {
         Div wrapper = new Div();
         wrapper.setClassName("grid-wrapper");
         splitLayout.addToPrimary(wrapper);
-        wrapper.add(grid);
+        HorizontalLayout buttonLayout = new HorizontalLayout();
+        buttonLayout.setMargin(true);
+        Button newBundle = new Button("Create new application bundle");
+        buttonLayout.add(newBundle);
+        wrapper.add(buttonLayout,grid);
     }
 
     private void refreshGrid() {
@@ -325,8 +323,11 @@ public class AppsView extends Div implements BeforeEnterObserver {
     }
 
     private void populateForm(FlyApplication value) {
+        splitLayout.getSecondaryComponent().setVisible(value != null);
         this.flyApplication = value;
-        binder.readBean(this.flyApplication);
+        if (binder != null) {
+            binder.readBean(this.flyApplication);
+        }
 
     }
 

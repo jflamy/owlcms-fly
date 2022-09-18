@@ -40,6 +40,7 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
     }
 
     public void loadRepository(String accessToken) {
+        this.deleteAll();
         String json = appListGetJson(accessToken);
         List<JsonNode> appData = appListFilterJson(json);
         for (JsonNode node : appData) {
@@ -64,6 +65,7 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
             for (JsonNode secretNode : appSecretsData) {
                 Map<String, Object> result3 = mapper.convertValue(secretNode, new TypeReference<Map<String, Object>>() {
                 });
+                logger.warn("**** {}",result3);
                 String secretName = (String) result3.get("secret");
                 if (secretName != null) {
                     if (secretName.startsWith(BUNDLE_PREFIX)) {
@@ -79,8 +81,9 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
                     image);
             FlyApplication fa = new FlyApplication();
             fa.setName((String) appName);
-
-            fa.setNameOn(appStatus.contentEquals("running"));
+            fa.setRunning(appStatus.contentEquals("running"));
+            fa.setLabel(label);
+            fa.setBundle(bundleName);
             this.save(fa);
         }
     }
