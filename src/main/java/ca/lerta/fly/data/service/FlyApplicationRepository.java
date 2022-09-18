@@ -28,20 +28,23 @@ import net.thisptr.jackson.jq.Versions;
 
 @Component
 @Primary
-public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplication,UUID> {
+public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplication, UUID> {
 
+    private static final String LABEL_PREFIX = "LABEL_";
+    private static final String BUNDLE_PREFIX = "BUNDLE_";
     ObjectMapper mapper = new ObjectMapper();
-    private Logger logger = (Logger)LoggerFactory.getLogger(FlyApplicationRepository.class);
+    private Logger logger = (Logger) LoggerFactory.getLogger(FlyApplicationRepository.class);
 
     public FlyApplicationRepository() {
         this.setPrimaryKeyGenerator(new UUIDPrimaryKeyGenerator());
     }
-    
+
     public void loadRepository(String accessToken) {
         String json = appListGetJson(accessToken);
         List<JsonNode> appData = appListFilterJson(json);
-        for (JsonNode node: appData) {
-            Map<String, Object> result = mapper.convertValue(node, new TypeReference<Map<String, Object>>(){});
+        for (JsonNode node : appData) {
+            Map<String, Object> result = mapper.convertValue(node, new TypeReference<Map<String, Object>>() {
+            });
             String appName = (String) result.get("name");
             String image = "";
             String bundleName = "";
@@ -49,21 +52,31 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
 
             String releasesJson = appReleasesGetJson(accessToken, appName);
             List<JsonNode> appReleasesData = appReleasesFilterJson(releasesJson);
-            for (JsonNode releaseNode: appReleasesData) {
-                Map<String, Object> result2 = mapper.convertValue(releaseNode, new TypeReference<Map<String, Object>>(){});
+            for (JsonNode releaseNode : appReleasesData) {
+                Map<String, Object> result2 = mapper.convertValue(releaseNode,
+                        new TypeReference<Map<String, Object>>() {
+                        });
                 image = (String) result2.get("image");
             }
 
             String secretsJson = appSecretsGetJson(accessToken, appName);
             List<JsonNode> appSecretsData = appSecretsFilterJson(secretsJson);
-            for (JsonNode secretNode: appSecretsData) {
-                Map<String, Object> result3 = mapper.convertValue(secretNode, new TypeReference<Map<String, Object>>(){});
-                bundleName = (String) result3.get("bundle");
-                label = (String) result3.get("label");
+            for (JsonNode secretNode : appSecretsData) {
+                Map<String, Object> result3 = mapper.convertValue(secretNode, new TypeReference<Map<String, Object>>() {
+                });
+                String secretName = (String) result3.get("secret");
+                if (secretName != null) {
+                    if (secretName.startsWith(BUNDLE_PREFIX)) {
+                        bundleName = secretName.substring(BUNDLE_PREFIX.length());
+                    } else if (secretName.startsWith(LABEL_PREFIX)) {
+                        label = secretName.substring(LABEL_PREFIX.length());
+                    }
+                }
             }
 
             String appStatus = (String) result.get("status");
-            logger.info("name {}, status {}, label {}, bundle {}, image {}", appName, appStatus, label, bundleName, image);
+            logger.info("name {}, status {}, label {}, bundle {}, image {}", appName, appStatus, label, bundleName,
+                    image);
             FlyApplication fa = new FlyApplication();
             fa.setName((String) appName);
 
@@ -75,7 +88,9 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
     private List<JsonNode> appListFilterJson(String json) {
         try {
             Scope rootScope = Application.rootJqScope;
-            JsonQuery q = JsonQuery.compile(".[] | select(.Organization.Slug == \"personal\") | {name: .Name, status: .Status, org: .Organization.Slug }", Versions.JQ_1_6);
+            JsonQuery q = JsonQuery.compile(
+                    ".[] | select(.Organization.Slug == \"personal\") | {name: .Name, status: .Status, org: .Organization.Slug }",
+                    Versions.JQ_1_6);
             JsonNode in = mapper.readTree(json);
             final List<JsonNode> out = new ArrayList<>();
             q.apply(Scope.newChildScope(rootScope), in, out::add);
