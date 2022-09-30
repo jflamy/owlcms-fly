@@ -33,11 +33,11 @@ public class FlyAuth {
      * 
      * @return the session id
      */
-    public Map<String, String> createSession() {
+    public Map<String, String> createSession(boolean signUp) {
         java.net.InetAddress localMachine;
         try {
             localMachine = java.net.InetAddress.getLocalHost();
-            Map<String, Object> apiRequest = Map.of("hostname", localMachine.getHostName(), "signup", true);
+            Map<String, Object> apiRequest = Map.of("hostname", localMachine.getHostName(), "signup", signUp);
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonApiRequest = objectMapper.writeValueAsString(apiRequest);
 

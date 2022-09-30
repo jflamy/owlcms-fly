@@ -25,11 +25,11 @@ public class AuthenticationController {
 
   Logger logger = (Logger) LoggerFactory.getLogger(AuthenticationController.class);
 
-  public void authenticate(Command callback) throws AuthenticationException, Exception {
+  public void authenticate(Command callback, boolean signUp) throws AuthenticationException, Exception {
     UI ui = UI.getCurrent();
 
     FlyAuth flyAuth = new FlyAuth();
-    Map<String, String> map = flyAuth.createSession();
+    Map<String, String> map = flyAuth.createSession(signUp);
     String authUrl = map.get("auth_url");
     flyAuth.openFlyLogin(authUrl, ui);
 
