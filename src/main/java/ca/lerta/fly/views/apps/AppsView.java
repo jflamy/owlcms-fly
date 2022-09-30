@@ -15,35 +15,30 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.Uses;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
-import com.vaadin.flow.server.VaadinServletRequest;
-import com.vaadin.flow.server.VaadinServletResponse;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 import ca.lerta.fly.data.entity.FlyApplication;
 import ca.lerta.fly.data.service.FlyApplicationRepository;
 import ca.lerta.fly.data.service.FlyApplicationService;
-import ca.lerta.fly.security.AuthenticationController;
+import ca.lerta.fly.security.TokenAuthentication;
 import ca.lerta.fly.views.MainLayout;
 import ch.qos.logback.classic.Logger;
 
@@ -64,7 +59,7 @@ import ch.qos.logback.classic.Logger;
  * So we use the battle-tested direct to repo approach. And we don't need paging
  * either.
  */
-public class AppsView extends Div implements BeforeEnterObserver {
+public class AppsView extends Div implements TokenAuthentication {
     Logger logger = (Logger) LoggerFactory.getLogger(AppsView.class);
 
     private final String APPLICATION_ID = "applicationID";
@@ -82,12 +77,6 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
     private FlyApplication flyApplication;
     private final FlyApplicationService flyApplicationService;
-
-    private UI ui;
-    private Dialog dialog;
-
-    private Button logout = new Button("Logout");
-    private Button login = new Button("Login");
 
     private FlyApplicationRepository flyApplicationRepository;
     private String accessToken;
@@ -118,39 +107,25 @@ public class AppsView extends Div implements BeforeEnterObserver {
 
     @Override
     public void onAttach(AttachEvent e) {
-        ui = UI.getCurrent();
-        configureDialog();
+        UI.getCurrent();
         flyApplicationRepository = flyApplicationService.getRepository();
-        new Thread(() -> {
-            String[] token = new String[1];
-            while (token[0] == null) {
-                VaadinSession session = e.getUI().getSession();
-                session.accessSynchronously(() -> {
-                    token[0] = (String) session.getAttribute("ACCESS_TOKEN");
-                    logger.debug("inside session {} access token {}", session, token[0]);
-                });
-                logger.debug("outside session access token {}", token[0]);
-                accessToken = token[0];
-                if (token[0] == null) {
-                    openDialog(token[0]);
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e1) {
-                    }
-                } else {
-                    closeDialog(token[0]);
-                    flyApplicationRepository.loadRepository(accessToken);
-                    ui.access(() -> {
-                        populateGrid(flyApplicationRepository);
-                        refreshGrid();
-                    });
-                }
-            }
-        }).start();
+        VaadinSession session = e.getUI().getSession();
+        session.accessSynchronously(() -> {
+            accessToken = (String) session.getAttribute("ACCESS_TOKEN");
+            logger.debug("session {} access token {}", session, accessToken);
+        });
+        if (accessToken == null) {
+            throw new RuntimeException("token not present, can't happen");
+        } else {
+            flyApplicationRepository.loadRepository(accessToken);
+            populateGrid(flyApplicationRepository);
+            refreshGrid();
+        }
     }
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
+        checkToken(event);
         Optional<UUID> applicationId = event.getRouteParameters().get(APPLICATION_ID).map(UUID::fromString);
         if (applicationId.isPresent()) {
             Optional<FlyApplication> applicationFromBackend = flyApplicationService.get(applicationId.get());
@@ -166,37 +141,6 @@ public class AppsView extends Div implements BeforeEnterObserver {
                 event.forwardTo(AppsView.class);
             }
         }
-    }
-
-    private void configureDialog() {
-        UI ui = UI.getCurrent();
-        // MainLayout mainLayout = MainLayout.getCurrent();
-        Component dialogInitialText = dialogInitialText();
-        dialog = new Dialog(dialogInitialText);
-        dialog.setModal(true);
-        dialog.getHeader().add(new H3("Connect to Fly.io"));
-        dialog.getFooter().add(login, logout);
-        logout.addClickListener(e -> {
-            new AuthenticationController().logout(
-                    VaadinServletRequest.getCurrent().getHttpServletRequest(),
-                    VaadinServletResponse.getCurrent().getHttpServletResponse());
-        });
-        login.addClickListener(e -> {
-            dialog.remove(dialogInitialText);
-            dialog.add(new Paragraph("Waiting for fly.io login to have been completed."));
-            try {
-                new AuthenticationController().authenticate(() -> {
-                    ui.access(() -> {
-                        // provide UI feedback if needed.
-
-                        // ui.navigate(AppsView.class);
-                        // mainLayout.recomputeDrawer();
-                    });
-                });
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
-        });
     }
 
     private void configureButtons(FlyApplicationService flyApplicationService) {
@@ -258,20 +202,6 @@ public class AppsView extends Div implements BeforeEnterObserver {
         grid.setItems(flyApplicationRepository.findAll());
     }
 
-    private void openDialog(String token) {
-        ui.access(() -> {
-            logger.warn("opening {} since token {}", dialog, token);
-            dialog.open();
-        });
-    }
-
-    private void closeDialog(String token) {
-        ui.access(() -> {
-            logger.warn("closing {} since token {}", dialog, token);
-            dialog.close();
-        });
-    }
-
     private void createEditorLayout(SplitLayout splitLayout) {
         Div editorLayoutDiv = new Div();
         editorLayoutDiv.setClassName("editor-layout");
@@ -303,14 +233,15 @@ public class AppsView extends Div implements BeforeEnterObserver {
     }
 
     private void createGridLayout(SplitLayout splitLayout) {
-        Div wrapper = new Div();
+        VerticalLayout wrapper = new VerticalLayout();
+        wrapper.setSizeFull();
         wrapper.setClassName("grid-wrapper");
         splitLayout.addToPrimary(wrapper);
         HorizontalLayout buttonLayout = new HorizontalLayout();
-        buttonLayout.setMargin(true);
+        buttonLayout.setMargin(false);
         Button newBundle = new Button("Create new application bundle");
         buttonLayout.add(newBundle);
-        wrapper.add(buttonLayout,grid);
+        wrapper.add(buttonLayout, grid);
     }
 
     private void refreshGrid() {
@@ -329,15 +260,5 @@ public class AppsView extends Div implements BeforeEnterObserver {
             binder.readBean(this.flyApplication);
         }
 
-    }
-
-    private Component dialogInitialText() {
-        Div div = new Div();
-        Paragraph p1 = new Paragraph(
-                "Use the Login button to go to the fly.io login page. If you do not have an account, you will be able to create one from there");
-        Paragraph p2 = new Paragraph(
-                "Fly.io will open in another browser tab. Once you have logged in, you can close the fly.io tab and come back here.");
-        div.add(/* title, */ p1, p2);
-        return div;
     }
 }

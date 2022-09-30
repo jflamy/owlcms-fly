@@ -18,7 +18,6 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 import ca.lerta.fly.security.AuthenticationController;
 import ca.lerta.fly.views.MainLayout;
-import ca.lerta.fly.views.apps.AppsView;
 
 @PageTitle("Login to Fly.io")
 @Route(value = "flylogin", layout = MainLayout.class)
@@ -45,11 +44,10 @@ public class FlyLoginOpenerView extends Div {
         login.addClickListener(e -> {
             try {
                 UI ui = UI.getCurrent();
-                MainLayout mainLayout = MainLayout.getCurrent();
                 new AuthenticationController().authenticate(() -> {
                     ui.access(() -> {
-                        ui.navigate(AppsView.class);
-                        // mainLayout.recomputeDrawer();
+                        // reload completely to trigger the Spring Security filter chain.
+                        ui.getPage().setLocation("/");
                     });
                 });
             } catch (Exception e1) {
