@@ -25,7 +25,7 @@ import ca.lerta.fly.data.entity.User;
 import ca.lerta.fly.security.AuthenticatedUser;
 import ca.lerta.fly.views.about.AboutView;
 import ca.lerta.fly.views.apps.AppsView;
-import ca.lerta.fly.views.flylogin.FlyOpenerView;
+import ca.lerta.fly.views.flylogin.FlyLoginOpenerView;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -101,8 +101,8 @@ public class MainLayout extends AppLayout {
         AppNav nav = new AppNav();
         nav.addClassNames("app-nav");
 
-        if (accessChecker.hasAccess(FlyOpenerView.class)) {
-            nav.addItem(new AppNavItem("Login", FlyOpenerView.class, "lab la-fly"));
+        if (accessChecker.hasAccess(FlyLoginOpenerView.class)) {
+            nav.addItem(new AppNavItem("Login", FlyLoginOpenerView.class, "lab la-fly"));
         }
         if (accessChecker.hasAccess(AppsView.class)) {
             nav.addItem(new AppNavItem("Apps", AppsView.class, "la la-columns"));

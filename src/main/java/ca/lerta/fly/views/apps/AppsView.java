@@ -7,9 +7,6 @@ import javax.annotation.security.PermitAll;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
@@ -47,7 +44,6 @@ import ca.lerta.fly.data.entity.FlyApplication;
 import ca.lerta.fly.data.service.FlyApplicationRepository;
 import ca.lerta.fly.data.service.FlyApplicationService;
 import ca.lerta.fly.security.AuthenticationController;
-import ca.lerta.fly.security.SecurityConfiguration;
 import ca.lerta.fly.views.MainLayout;
 import ch.qos.logback.classic.Logger;
 
@@ -188,14 +184,18 @@ public class AppsView extends Div implements BeforeEnterObserver {
         login.addClickListener(e -> {
             dialog.remove(dialogInitialText);
             dialog.add(new Paragraph("Waiting for fly.io login to have been completed."));
-            new AuthenticationController().authenticate(() -> {
-                ui.access(() -> {
-                    // provide UI feedback if needed.
+            try {
+                new AuthenticationController().authenticate(() -> {
+                    ui.access(() -> {
+                        // provide UI feedback if needed.
 
-                    // ui.navigate(AppsView.class);
-                    // mainLayout.recomputeDrawer();
+                        // ui.navigate(AppsView.class);
+                        // mainLayout.recomputeDrawer();
+                    });
                 });
-            });
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
         });
     }
 

@@ -6,10 +6,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
@@ -26,10 +25,7 @@ public class AuthenticationController {
 
   Logger logger = (Logger) LoggerFactory.getLogger(AuthenticationController.class);
 
-  @Autowired
-  AuthenticationManager authenticationManager;
-
-  public void authenticate(Command c) {
+  public void authenticate(Command c) throws AuthenticationException, Exception {
     UI ui = UI.getCurrent();
 
     FlyAuth flyAuth = new FlyAuth();
@@ -37,9 +33,10 @@ public class AuthenticationController {
     String authUrl = map.get("auth_url");
     flyAuth.openFlyLogin(authUrl, ui);
 
+    // TODO: move this to beforeEnter based on presence of token
     // this must take place in the main request thread, otherwise the authentication does not get
     // stored and associated with the session.
-    Authentication result = SecurityConfiguration.authenticationManagerBean
+    Authentication result = SecurityConfiguration.authentificationManager
         .authenticate(new UsernamePasswordAuthenticationToken("user", "user"));
     SecurityContextHolder.getContext().setAuthentication(result);
 

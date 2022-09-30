@@ -3,6 +3,7 @@ package ca.lerta.fly.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,17 +11,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.vaadin.flow.spring.security.VaadinWebSecurityConfigurerAdapter;
+import com.vaadin.flow.spring.security.VaadinWebSecurity;
 
-import ca.lerta.fly.views.flylogin.FlyOpenerView;
+import ca.lerta.fly.views.flylogin.FlyLoginOpenerView;
 
 @EnableWebSecurity
 @Configuration
-@SuppressWarnings("deprecation")
-public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
+public class SecurityConfiguration extends VaadinWebSecurity {
 
     public static final String LOGOUT_URL = "/";
-    static AuthenticationManager authenticationManagerBean;
+    public static AuthenticationManager authentificationManager;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -30,7 +30,7 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
-        setLoginView(http, FlyOpenerView.class, LOGOUT_URL);
+        setLoginView(http, FlyLoginOpenerView.class, LOGOUT_URL);
     }
 
     @Override
@@ -40,13 +40,11 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
         web.ignoring().antMatchers("/images/*.png");
     }
 
-    @Override
     @Bean
-    // deprecated because Vaadin adapter extends deprecated class
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        System.err.println("authenticationManagerBean " + super.authenticationManagerBean().toString());
-        authenticationManagerBean = super.authenticationManagerBean();
-        return super.authenticationManagerBean();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
+        // for some reason cannot autowire this as a property in other classes, workaround
+        SecurityConfiguration.authentificationManager = authenticationConfiguration.getAuthenticationManager();
+        return authenticationConfiguration.getAuthenticationManager();
     }
-
 }

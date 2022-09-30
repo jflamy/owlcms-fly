@@ -25,28 +25,32 @@ import ca.lerta.fly.views.apps.AppsView;
 @PermitAll
 @AnonymousAllowed
 
-public class FlyOpenerView extends Div {
+public class FlyLoginOpenerView extends Div {
 
-    private Button cancel = new Button("Logout");
-    private Button save = new Button("Login");
+    private Button logout = new Button("Logout");
+    private Button login = new Button("Login");
 
-    public FlyOpenerView() {
+    public FlyLoginOpenerView() {
         addClassName("deploy-view");
 
         add(createTitle());
         add(createFormLayout());
         add(createButtonLayout());
 
-        cancel.addClickListener(e -> {
+        logout.addClickListener(e -> {
             new AuthenticationController().logout(
                     VaadinServletRequest.getCurrent().getHttpServletRequest(),
                     VaadinServletResponse.getCurrent().getHttpServletResponse());
         });
-        save.addClickListener(e -> {
-            new AuthenticationController().authenticate(() -> {
-                UI.getCurrent().navigate(AppsView.class);
-                MainLayout.getCurrent().recomputeDrawer();
-            });
+        login.addClickListener(e -> {
+            try {
+                new AuthenticationController().authenticate(() -> {
+                    UI.getCurrent().navigate(AppsView.class);
+                    MainLayout.getCurrent().recomputeDrawer();
+                });
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
         });
     }
 
@@ -67,9 +71,9 @@ public class FlyOpenerView extends Div {
     private Component createButtonLayout() {
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.addClassName("button-layout");
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        buttonLayout.add(save);
-        buttonLayout.add(cancel);
+        login.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        buttonLayout.add(login);
+        buttonLayout.add(logout);
         return buttonLayout;
     }
 
