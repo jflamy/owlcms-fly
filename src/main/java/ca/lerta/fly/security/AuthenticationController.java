@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,24 +20,18 @@ import ch.qos.logback.classic.Logger;
 
 @Controller
 public class AuthenticationController {
-  // private static final String SECURITY_CONTEXT_REPOSITORY = "SECURITY_CONTEXT_REPOSITORY";
+  // private static final String SECURITY_CONTEXT_REPOSITORY =
+  // "SECURITY_CONTEXT_REPOSITORY";
 
   Logger logger = (Logger) LoggerFactory.getLogger(AuthenticationController.class);
 
-  public void authenticate(Command c) throws AuthenticationException, Exception {
+  public void authenticate(Command callback) throws AuthenticationException, Exception {
     UI ui = UI.getCurrent();
 
     FlyAuth flyAuth = new FlyAuth();
     Map<String, String> map = flyAuth.createSession();
     String authUrl = map.get("auth_url");
     flyAuth.openFlyLogin(authUrl, ui);
-
-    // TODO: move this to beforeEnter based on presence of token
-    // this must take place in the main request thread, otherwise the authentication does not get
-    // stored and associated with the session.
-    Authentication result = SecurityConfiguration.authentificationManager
-        .authenticate(new UsernamePasswordAuthenticationToken("user", "user"));
-    SecurityContextHolder.getContext().setAuthentication(result);
 
     flyAuth.waitForTokenString(
         map.get("id"),
@@ -49,10 +42,9 @@ public class AuthenticationController {
           session.access(() -> {
             session.setAttribute("ACCESS_TOKEN", token);
           });
-          c.execute();
+          callback.execute();
         });
   }
-
 
   public void logout(HttpServletRequest request, HttpServletResponse response) {
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();

@@ -44,9 +44,13 @@ public class FlyLoginOpenerView extends Div {
         });
         login.addClickListener(e -> {
             try {
+                UI ui = UI.getCurrent();
+                MainLayout mainLayout = MainLayout.getCurrent();
                 new AuthenticationController().authenticate(() -> {
-                    UI.getCurrent().navigate(AppsView.class);
-                    MainLayout.getCurrent().recomputeDrawer();
+                    ui.access(() -> {
+                        ui.navigate(AppsView.class);
+                        // mainLayout.recomputeDrawer();
+                    });
                 });
             } catch (Exception e1) {
                 e1.printStackTrace();
