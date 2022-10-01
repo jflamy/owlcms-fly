@@ -102,7 +102,7 @@ public class MainLayout extends AppLayout {
         nav.addClassNames("app-nav");
 
         if (accessChecker.hasAccess(FlyLoginOpenerView.class)) {
-            nav.addItem(new AppNavItem("Login", FlyLoginOpenerView.class, "lab la-fly"));
+            nav.addItem(new AppNavItem("Account Login/Logout", FlyLoginOpenerView.class, "lab la-fly"));
         }
         if (accessChecker.hasAccess(AppsView.class)) {
             nav.addItem(new AppNavItem("Apps", AppsView.class, "la la-columns"));

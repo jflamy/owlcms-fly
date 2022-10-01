@@ -19,7 +19,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ca.lerta.fly.security.AuthenticationController;
 import ca.lerta.fly.views.MainLayout;
 
-@PageTitle("Login to Fly.io")
+@PageTitle("Owlcms Application Hosting on Fly.io")
 @Route(value = "flylogin", layout = MainLayout.class)
 @PermitAll
 @AnonymousAllowed

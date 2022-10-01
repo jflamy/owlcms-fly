@@ -2,6 +2,7 @@ package ca.lerta.fly.views.apps;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import javax.annotation.security.PermitAll;
 
@@ -15,6 +16,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.Uses;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -35,6 +37,7 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
+import ca.lerta.fly.data.entity.AppBundle;
 import ca.lerta.fly.data.entity.FlyApplication;
 import ca.lerta.fly.data.service.FlyApplicationRepository;
 import ca.lerta.fly.data.service.FlyApplicationService;
@@ -240,6 +243,7 @@ public class AppsView extends Div implements TokenAuthentication {
         HorizontalLayout buttonLayout = new HorizontalLayout();
         buttonLayout.setMargin(false);
         Button newBundle = new Button("Create new application bundle");
+        newBundle.addClickListener((e) -> bundleCreationDialog(appBundle -> System.err.println(appBundle.toString())));
         buttonLayout.add(newBundle);
         wrapper.add(buttonLayout, grid);
     }
@@ -259,6 +263,26 @@ public class AppsView extends Div implements TokenAuthentication {
         if (binder != null) {
             binder.readBean(this.flyApplication);
         }
+    }
 
+    private Dialog bundleCreationDialog(Consumer<AppBundle> creationCallback) {
+        Dialog d = new Dialog();
+        AppBundle newBundle = new AppBundle();
+        AppBundleEditingForm bundleEdit = new AppBundleEditingForm(newBundle);
+        d.add(bundleEdit);
+        Button saveButton = new Button("Save", (e) -> {
+            try {
+                bundleEdit.getBinder().writeBean(newBundle);
+                creationCallback.accept(newBundle);
+            } catch (ValidationException e1) {
+            }
+        });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button cancelButton = new Button("Cancel", (e) -> {
+            d.close();
+        });
+        d.getFooter().add(saveButton, cancelButton);
+        d.open();
+        return d;
     }
 }
