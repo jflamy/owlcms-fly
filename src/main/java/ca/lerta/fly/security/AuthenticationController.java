@@ -20,8 +20,6 @@ import ch.qos.logback.classic.Logger;
 
 @Controller
 public class AuthenticationController {
-  // private static final String SECURITY_CONTEXT_REPOSITORY =
-  // "SECURITY_CONTEXT_REPOSITORY";
 
   Logger logger = (Logger) LoggerFactory.getLogger(AuthenticationController.class);
 

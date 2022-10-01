@@ -22,7 +22,7 @@ public interface TokenAuthentication extends BeforeEnterObserver {
             // authenticate as user
             // this must take place in the main request thread, otherwise the Authentication
             // does not get stored and associated with the session.
-            Authentication result = SecurityConfiguration.authentificationManager
+            Authentication result = SecurityConfiguration.getAuthentificationManager()
                     .authenticate(new UsernamePasswordAuthenticationToken("user", "user"));
             SecurityContextHolder.getContext().setAuthentication(result);
             return;

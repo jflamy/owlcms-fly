@@ -20,7 +20,11 @@ import ca.lerta.fly.views.flylogin.FlyLoginOpenerView;
 public class SecurityConfiguration extends VaadinWebSecurity {
 
     public static final String LOGOUT_URL = "/";
-    public static AuthenticationManager authentificationManager;
+    private static AuthenticationManager authentificationManager;
+
+    public static AuthenticationManager getAuthentificationManager() {
+        return authentificationManager;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
