@@ -18,6 +18,8 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep.LabelsPosition;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
@@ -214,6 +216,7 @@ public class AppsView extends Div implements TokenAuthentication {
         editorLayoutDiv.add(editorDiv);
 
         FormLayout formLayout = new FormLayout();
+        formLayout.setResponsiveSteps(new ResponsiveStep("0", 1, LabelsPosition.TOP));
         name = new TextField("Name");
         running = new Checkbox("Running");
         Component[] fields = new Component[] { name, running };
