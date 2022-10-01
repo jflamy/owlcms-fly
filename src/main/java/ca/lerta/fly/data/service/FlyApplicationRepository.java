@@ -32,6 +32,7 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
 
     private static final String LABEL_PREFIX = "LABEL_";
     private static final String BUNDLE_PREFIX = "BUNDLE_";
+    private static final String APPTYPE_PREFIX = "APPTYPE_";
     ObjectMapper mapper = new ObjectMapper();
     private Logger logger = (Logger) LoggerFactory.getLogger(FlyApplicationRepository.class);
 
@@ -50,6 +51,7 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
             String image = "";
             String bundleName = "";
             String label = "";
+            String appType = "";
 
             String releasesJson = appReleasesGetJson(accessToken, appName);
             List<JsonNode> appReleasesData = appReleasesFilterJson(releasesJson);
@@ -72,18 +74,21 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
                         bundleName = secretName.substring(BUNDLE_PREFIX.length());
                     } else if (secretName.startsWith(LABEL_PREFIX)) {
                         label = secretName.substring(LABEL_PREFIX.length());
+                    } else if (secretName.startsWith(APPTYPE_PREFIX)) {
+                        appType = secretName.substring(APPTYPE_PREFIX.length());
                     }
                 }
             }
 
             String appStatus = (String) result.get("status");
-            logger.info("name {}, status {}, label {}, bundle {}, image {}", appName, appStatus, label, bundleName,
-                    image);
+            logger.info("name {}, status {}, label {}, bundle {}, image {}, apptype {}", appName, appStatus, label, bundleName,
+                    image, appType);
             FlyApplication fa = new FlyApplication();
             fa.setName((String) appName);
             fa.setRunning(appStatus.contentEquals("running"));
             fa.setLabel(label);
             fa.setBundle(bundleName);
+            fa.setAppType(appType);
             this.save(fa);
         }
     }

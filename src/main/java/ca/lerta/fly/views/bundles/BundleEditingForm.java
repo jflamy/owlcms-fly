@@ -1,18 +1,18 @@
-package ca.lerta.fly.views.apps;
+package ca.lerta.fly.views.bundles;
 
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 
-import ca.lerta.fly.data.entity.AppBundle;
+import ca.lerta.fly.data.entity.Bundle;
 
-public class AppBundleEditingForm extends FormLayout {
+public class BundleEditingForm extends FormLayout {
     private TextField owlcmsName = new TextField("Owlcms Application Name");
     private TextField resultsName = new TextField("Public Scoreboard Application Name");
-    private BeanValidationBinder<AppBundle> binder = new BeanValidationBinder<>(AppBundle.class);
+    private BeanValidationBinder<Bundle> binder = new BeanValidationBinder<>(Bundle.class);
 
-    AppBundleEditingForm() {
+    BundleEditingForm() {
         owlcmsName.setHelperText("Give the name for your main owlcms application.  '.fly.dev' will be added.");
         resultsName.setHelperText("Give the name for the public scoreboard application.  '.fly.dev' will be added.");
         binder.bindInstanceFields(this);
@@ -26,12 +26,12 @@ public class AppBundleEditingForm extends FormLayout {
         this.add(owlcmsName, resultsName);
     }
 
-    AppBundleEditingForm(AppBundle ab) {
+    public BundleEditingForm(Bundle ab) {
         this();
         binder.readBean(ab);
     }
 
-    public Binder<AppBundle> getBinder() {
+    public Binder<Bundle> getBinder() {
         return binder;
     }
 }

@@ -11,6 +11,10 @@ public class FlyApplication extends AbstractEntity {
     private String label;
     private boolean redeployRequested;
     private boolean deployed;
+    private String appType;
+    public static final String OWLCMS = "OWLCMS";
+    public static final String RESULTS = "RESULTS";
+    public static final String DB = "DB";
 
     public boolean isDeployed() {
         return deployed;
@@ -56,8 +60,16 @@ public class FlyApplication extends AbstractEntity {
         return running;
     }
 
+    public String getAppType() {
+        return appType;
+    }
+
     public void setRunning(boolean running) {
         this.running = running;
+    }
+
+    public void setAppType(String appType) {
+        this.appType = appType;
     }
 
 }

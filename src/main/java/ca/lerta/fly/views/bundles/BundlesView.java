@@ -1,4 +1,4 @@
-package ca.lerta.fly.views.apps;
+package ca.lerta.fly.views.bundles;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -31,30 +31,31 @@ import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
-import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.function.SerializableBiConsumer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 import ca.lerta.fly.data.entity.Bundle;
-import ca.lerta.fly.data.entity.FlyApplication;
-import ca.lerta.fly.data.service.FlyApplicationRepository;
-import ca.lerta.fly.data.service.FlyApplicationService;
+import ca.lerta.fly.data.service.BundleRepository;
+import ca.lerta.fly.data.service.BundleService;
 import ca.lerta.fly.security.TokenAuthentication;
 import ca.lerta.fly.views.MainLayout;
-import ca.lerta.fly.views.bundles.BundleEditingForm;
 import ch.qos.logback.classic.Logger;
 
-@PageTitle("Fly.io owlcms Applications")
-@Route(value = "apps/:applicationID?/:action?(edit)", layout = MainLayout.class)
+@PageTitle("Fly.io owlcms Application Bundles")
+@Route(value = "bundles/:bundleID?/:action?(edit)", layout = MainLayout.class)
+@RouteAlias(value = "", layout = MainLayout.class)
 @PermitAll
 @AnonymousAllowed
 @Uses(Icon.class)
 
 /**
- * Show users own applications.
+ * Show users own application bundles.
  * 
  * Quirky implementation - the table is stored in a repository stored in the
  * session. Because we update from background threads, much of the Spring
@@ -63,13 +64,13 @@ import ch.qos.logback.classic.Logger;
  * So we use the battle-tested direct to repo approach. And we don't need paging
  * either.
  */
-public class AppsView extends Div implements TokenAuthentication {
-    Logger logger = (Logger) LoggerFactory.getLogger(AppsView.class);
+public class BundlesView extends Div implements TokenAuthentication {
+    Logger logger = (Logger) LoggerFactory.getLogger(BundlesView.class);
 
-    private final String APPLICATION_ID = "applicationID";
-    private final String APPLICATION_EDIT_ROUTE_TEMPLATE = "apps/%s/edit";
+    private final String BUNDLE_ID = "bundleID";
+    private final String BUNDLE_EDIT_ROUTE_TEMPLATE = "bundles/%s/edit";
 
-    private Grid<FlyApplication> grid = new Grid<>(FlyApplication.class, false);
+    private Grid<Bundle> grid = new Grid<>(Bundle.class, false);
 
     private TextField name;
     private Checkbox running;
@@ -77,19 +78,19 @@ public class AppsView extends Div implements TokenAuthentication {
     private Button cancel = new Button("Cancel");
     private Button save = new Button("Save");
 
-    private BeanValidationBinder<FlyApplication> binder;
+    private BeanValidationBinder<Bundle> binder;
 
-    private FlyApplication flyApplication;
-    private final FlyApplicationService flyApplicationService;
+    private Bundle Bundle;
+    private final BundleService bundleService;
 
-    private FlyApplicationRepository flyApplicationRepository;
+    private BundleRepository BundleRepository;
     private String accessToken;
 
     private SplitLayout splitLayout;
 
     @Autowired
-    public AppsView(FlyApplicationService flyApplicationService) {
-        this.flyApplicationService = flyApplicationService;
+    public BundlesView(BundleService bundleService) {
+        this.bundleService = bundleService;
         addClassNames("apps-view");
 
         // Create UI
@@ -99,20 +100,20 @@ public class AppsView extends Div implements TokenAuthentication {
         add(splitLayout);
 
         // Configure Grid
-        configureGrid(flyApplicationService);
+        configureGrid(bundleService);
 
-        // Configure Form
-        binder = new BeanValidationBinder<>(FlyApplication.class);
-        binder.bindInstanceFields(this);
+        // // Configure Form
+        // binder = new BeanValidationBinder<>(Bundle.class);
+        // binder.bindInstanceFields(this);
 
         // Buttons
-        configureButtons(flyApplicationService);
+        configureButtons(bundleService);
     }
 
     @Override
     public void onAttach(AttachEvent e) {
         UI.getCurrent();
-        flyApplicationRepository = flyApplicationService.getRepository();
+        BundleRepository = bundleService.getRepository();
         VaadinSession session = e.getUI().getSession();
         session.accessSynchronously(() -> {
             accessToken = (String) session.getAttribute("ACCESS_TOKEN");
@@ -121,8 +122,8 @@ public class AppsView extends Div implements TokenAuthentication {
         if (accessToken == null) {
             throw new RuntimeException("token not present, can't happen");
         } else {
-            flyApplicationRepository.loadRepository(accessToken);
-            populateGrid(flyApplicationRepository);
+            BundleRepository.loadRepository(accessToken);
+            populateGrid(BundleRepository);
             refreshGrid();
         }
     }
@@ -130,24 +131,24 @@ public class AppsView extends Div implements TokenAuthentication {
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
         checkToken(event);
-        Optional<UUID> applicationId = event.getRouteParameters().get(APPLICATION_ID).map(UUID::fromString);
-        if (applicationId.isPresent()) {
-            Optional<FlyApplication> applicationFromBackend = flyApplicationService.get(applicationId.get());
-            if (applicationFromBackend.isPresent()) {
-                populateForm(applicationFromBackend.get());
+        Optional<UUID> bundleId = event.getRouteParameters().get(BUNDLE_ID).map(UUID::fromString);
+        if (bundleId.isPresent()) {
+            Optional<Bundle> bundleFromBackend = bundleService.get(bundleId.get());
+            if (bundleFromBackend.isPresent()) {
+                populateForm(bundleFromBackend.get());
             } else {
                 Notification.show(
-                        String.format("The requested application was not found, ID = %s", applicationId.get()), 3000,
+                        String.format("The requested bundle was not found, ID = %s", bundleId.get()), 3000,
                         Notification.Position.BOTTOM_START);
                 // when a row is selected but the data is no longer available,
                 // refresh grid
                 refreshGrid();
-                event.forwardTo(AppsView.class);
+                event.forwardTo(BundlesView.class);
             }
         }
     }
 
-    private void configureButtons(FlyApplicationService flyApplicationService) {
+    private void configureButtons(BundleService BundleService) {
         cancel.addClickListener(e -> {
             clearForm();
             refreshGrid();
@@ -155,55 +156,53 @@ public class AppsView extends Div implements TokenAuthentication {
 
         save.addClickListener(e -> {
             try {
-                if (this.flyApplication == null) {
-                    this.flyApplication = new FlyApplication();
+                if (this.Bundle == null) {
+                    this.Bundle = new Bundle();
                 }
-                binder.writeBean(this.flyApplication);
-                flyApplicationService.update(this.flyApplication);
+                binder.writeBean(this.Bundle);
+                BundleService.update(this.Bundle);
                 clearForm();
                 refreshGrid();
-                Notification.show("Fly Application details stored.");
-                UI.getCurrent().navigate(AppsView.class);
+                Notification.show("Fly application bundle details stored.");
+                UI.getCurrent().navigate(BundlesView.class);
             } catch (ValidationException validationException) {
-                Notification.show("An exception happened while trying to store the application details.");
+                Notification.show("An exception happened while trying to store the application bundle details.");
             }
         });
     }
 
-    private void configureGrid(FlyApplicationService flyApplicationService) {
+    private void configureGrid(BundleService BundleService) {
         // Configure Grid
-        grid.addColumn("name").setAutoWidth(true);
-        LitRenderer<FlyApplication> runningRenderer = LitRenderer.<FlyApplication>of(
-                "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
-                .withProperty("icon", running -> running.isRunning() ? "check" : "minus").withProperty("color",
-                        running -> running.isRunning()
-                                ? "var(--lumo-primary-text-color)"
-                                : "var(--lumo-disabled-text-color)");
+        grid.addColumn("bundleName").setAutoWidth(true);
 
-        grid.addColumn(runningRenderer).setHeader("Status").setAutoWidth(true);
-        grid.addColumn("bundle").setAutoWidth(true);
+        SerializableBiConsumer<Checkbox, Bundle> owlcmsRunningConsumer = (cb, bundle) -> {
+            cb.setValue(bundle.isOwlcmsActualRunning());
+            cb.addValueChangeListener(e -> bundle.setOwlcmsDesiredRunning(e.getValue()));
+        };
+        ComponentRenderer<Checkbox,Bundle> owlcmsRunningRenderer = new ComponentRenderer<>(Checkbox::new, owlcmsRunningConsumer);
+        grid.addColumn(owlcmsRunningRenderer).setHeader("Running?").setAutoWidth(true);
 
-        populateGrid(flyApplicationService.getRepository());
+        populateGrid(BundleService.getRepository());
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
         // when a row is selected or deselected, populate form
         grid.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null) {
-                UI.getCurrent().navigate(String.format(APPLICATION_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+                UI.getCurrent().navigate(String.format(BUNDLE_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
             } else {
                 clearForm();
-                UI.getCurrent().navigate(AppsView.class);
+                UI.getCurrent().navigate(BundlesView.class);
             }
         });
         clearForm();
     }
 
-    private void populateGrid(FlyApplicationRepository flyApplicationRepository) {
-        // grid.setItems(query -> flyApplicationRepository.list(
+    private void populateGrid(BundleRepository BundleRepository) {
+        // grid.setItems(query -> BundleRepository.list(
         // PageRequest.of(query.getPage(), query.getPageSize(),
         // VaadinSpringDataHelpers.toSpringDataSort(query)))
         // .stream());
-        grid.setItems(flyApplicationRepository.findAll());
+        grid.setItems(BundleRepository.findAll());
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
@@ -259,11 +258,11 @@ public class AppsView extends Div implements TokenAuthentication {
         populateForm(null);
     }
 
-    private void populateForm(FlyApplication value) {
+    private void populateForm(Bundle value) {
         splitLayout.getSecondaryComponent().setVisible(value != null);
-        this.flyApplication = value;
+        this.Bundle = value;
         if (binder != null) {
-            binder.readBean(this.flyApplication);
+            binder.readBean(this.Bundle);
         }
     }
 

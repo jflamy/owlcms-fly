@@ -25,6 +25,7 @@ import ca.lerta.fly.data.entity.User;
 import ca.lerta.fly.security.AuthenticatedUser;
 import ca.lerta.fly.views.about.AboutView;
 import ca.lerta.fly.views.apps.AppsView;
+import ca.lerta.fly.views.bundles.BundlesView;
 import ca.lerta.fly.views.flylogin.FlyLoginOpenerView;
 
 /**
@@ -104,8 +105,11 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(FlyLoginOpenerView.class)) {
             nav.addItem(new AppNavItem("Account Login/Logout", FlyLoginOpenerView.class, "lab la-fly"));
         }
+        if (accessChecker.hasAccess(BundlesView.class)) {
+            nav.addItem(new AppNavItem("Application Bundles", AppsView.class, "la la-columns"));
+        }
         if (accessChecker.hasAccess(AppsView.class)) {
-            nav.addItem(new AppNavItem("Apps", AppsView.class, "la la-columns"));
+            nav.addItem(new AppNavItem("Applications", AppsView.class, "la la-columns"));
         }
         if (accessChecker.hasAccess(AboutView.class)) {
             nav.addItem(new AppNavItem("About", AboutView.class, "la la-file"));
