@@ -104,6 +104,4 @@ public class Bundle extends AbstractEntity {
     public boolean isOwlcmsDesiredRunning() {
         return this.owlcmsDesiredRunning != null ? this.owlcmsDesiredRunning : isOwlcmsActualRunning();
     }
-
-
 }
