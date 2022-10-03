@@ -24,15 +24,15 @@ public class Bundle extends AbstractEntity {
         return bundleName;
     }
 
-    public boolean isOwlcmsActualRunning() {
+    public Boolean isOwlcmsActualRunning() {
         return owlcmsActualRunning;
     }
 
-    public boolean isResultsActualRunning() {
+    public Boolean isResultsActualRunning() {
         return resultsActualRunning;
     }
 
-    public boolean isdBActualRunning() {
+    public Boolean isdBActualRunning() {
         return dBActualRunning;
     }
 
@@ -103,5 +103,9 @@ public class Bundle extends AbstractEntity {
 
     public boolean isOwlcmsDesiredRunning() {
         return this.owlcmsDesiredRunning != null ? this.owlcmsDesiredRunning : isOwlcmsActualRunning();
+    }
+
+    public void syncWithRemote() {
+        
     }
 }

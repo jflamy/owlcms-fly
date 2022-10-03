@@ -9,6 +9,7 @@ import javax.annotation.security.PermitAll;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.vaadin.componentfactory.ToggleButton;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -175,12 +176,25 @@ public class BundlesView extends Div implements TokenAuthentication {
         // Configure Grid
         grid.addColumn("bundleName").setAutoWidth(true);
 
-        SerializableBiConsumer<Checkbox, Bundle> owlcmsRunningConsumer = (cb, bundle) -> {
-            cb.setValue(bundle.isOwlcmsActualRunning());
-            cb.addValueChangeListener(e -> bundle.setOwlcmsDesiredRunning(e.getValue()));
+        SerializableBiConsumer<ToggleButton, Bundle> owlcmsRunningConsumer = (toggle, bundle) -> {
+            toggle.setValue(bundle.isOwlcmsActualRunning());
+            toggle.addValueChangeListener(e -> bundle.setOwlcmsDesiredRunning(e.getValue()));
         };
-        ComponentRenderer<Checkbox,Bundle> owlcmsRunningRenderer = new ComponentRenderer<>(Checkbox::new, owlcmsRunningConsumer);
-        grid.addColumn(owlcmsRunningRenderer).setHeader("Running?").setAutoWidth(true);
+        ComponentRenderer<ToggleButton, Bundle> owlcmsRunningRenderer = new ComponentRenderer<>(ToggleButton::new,
+                owlcmsRunningConsumer);
+        grid.addColumn(owlcmsRunningRenderer).setHeader("owlcms on/off").setAutoWidth(true);
+
+        SerializableBiConsumer<ToggleButton, Bundle> resultsRunningConsumer = (toggle, bundle) -> {
+            if (bundle.isResultsActualRunning() != null) {
+                toggle.setValue(bundle.isResultsActualRunning());
+                toggle.addValueChangeListener(e -> bundle.setOwlcmsDesiredRunning(e.getValue()));
+            } else {
+                toggle.setVisible(false);
+            }
+        };
+        ComponentRenderer<ToggleButton, Bundle> resultsRunningRenderer = new ComponentRenderer<>(ToggleButton::new,
+                resultsRunningConsumer);
+        grid.addColumn(resultsRunningRenderer).setHeader("public scoreboard on/off").setAutoWidth(true);
 
         populateGrid(BundleService.getRepository());
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
