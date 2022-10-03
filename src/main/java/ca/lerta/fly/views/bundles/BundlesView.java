@@ -45,6 +45,7 @@ import ca.lerta.fly.data.entity.Bundle;
 import ca.lerta.fly.data.service.BundleRepository;
 import ca.lerta.fly.data.service.BundleService;
 import ca.lerta.fly.security.TokenAuthentication;
+import ca.lerta.fly.utils.CommandUtils;
 import ca.lerta.fly.views.MainLayout;
 import ch.qos.logback.classic.Logger;
 
@@ -178,7 +179,14 @@ public class BundlesView extends Div implements TokenAuthentication {
 
         SerializableBiConsumer<ToggleButton, Bundle> owlcmsRunningConsumer = (toggle, bundle) -> {
             toggle.setValue(bundle.isOwlcmsActualRunning());
-            toggle.addValueChangeListener(e -> bundle.setOwlcmsDesiredRunning(e.getValue()));
+            toggle.addValueChangeListener(e -> {
+                bundle.setOwlcmsDesiredRunning(e.getValue());
+                var accessToken = (String) VaadinSession.getCurrent().getAttribute("ACCESS_TOKEN");
+                var accessToken2 = CommandUtils.getAccessToken();
+                logger.warn("1============={} {}",accessToken,accessToken2);
+                bundle.syncWithRemote(accessToken);
+                refreshGrid();
+            });
         };
         ComponentRenderer<ToggleButton, Bundle> owlcmsRunningRenderer = new ComponentRenderer<>(ToggleButton::new,
                 owlcmsRunningConsumer);
@@ -187,7 +195,14 @@ public class BundlesView extends Div implements TokenAuthentication {
         SerializableBiConsumer<ToggleButton, Bundle> resultsRunningConsumer = (toggle, bundle) -> {
             if (bundle.isResultsActualRunning() != null) {
                 toggle.setValue(bundle.isResultsActualRunning());
-                toggle.addValueChangeListener(e -> bundle.setOwlcmsDesiredRunning(e.getValue()));
+                toggle.addValueChangeListener(e -> {
+                    bundle.setResultsDesiredRunning(e.getValue());
+                    var accessToken = (String) VaadinSession.getCurrent().getAttribute("ACCESS_TOKEN");
+                    var accessToken2 = CommandUtils.getAccessToken();
+                    logger.warn("2============={} {}",accessToken,accessToken2);
+                    bundle.syncWithRemote(accessToken);;
+                    refreshGrid();
+                });
             } else {
                 toggle.setVisible(false);
             }

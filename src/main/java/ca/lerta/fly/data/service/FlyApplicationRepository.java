@@ -1,14 +1,9 @@
 package ca.lerta.fly.data.service;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
@@ -23,6 +18,7 @@ import ca.lerta.fly.Application;
 import ca.lerta.fly.data.entity.FlyApplication;
 import ca.lerta.fly.inmemory.InMemoryJpaRepository;
 import ca.lerta.fly.inmemory.UUIDPrimaryKeyGenerator;
+import ca.lerta.fly.utils.CommandUtils;
 import ch.qos.logback.classic.Logger;
 import net.thisptr.jackson.jq.JsonQuery;
 import net.thisptr.jackson.jq.Scope;
@@ -31,18 +27,14 @@ import net.thisptr.jackson.jq.Versions;
 @Component
 @Primary
 public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplication, UUID> {
-
-    private static final String FLYCTL_COMMANDS = "flyctlCommands";
     private static final String LABEL_PREFIX = "LABEL_";
     private static final String BUNDLE_PREFIX = "BUNDLE_";
     private static final String APPTYPE_PREFIX = "APPTYPE_";
     ObjectMapper mapper = new ObjectMapper();
     private Logger logger = (Logger) LoggerFactory.getLogger(FlyApplicationRepository.class);
-    private ResourceBundle flyCommands;
 
     public FlyApplicationRepository() {
         this.setPrimaryKeyGenerator(new UUIDPrimaryKeyGenerator());
-        this.flyCommands = ResourceBundle.getBundle(FLYCTL_COMMANDS);
     }
 
     public void loadRepository(String accessToken) {
@@ -117,34 +109,14 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
 
     private String appListGetJson(String accessToken) {
         var processBuilder = new ProcessBuilder();
-        String json = "";
-        //processBuilder.command("flyctl", "apps", "list", "-j", "-t", accessToken);
-        processBuilder.command(getCommandArgs("listApplications", accessToken));
-        try {
-            var process = processBuilder.start();
-            try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                json = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-            }
-        } catch (Exception e) {
-            // ignored
-        }
-        return json;
+        processBuilder.command(CommandUtils.getCommandArgs("listApplications", accessToken));
+        return CommandUtils.getProcessOutput(processBuilder);
     }
 
     private String appReleasesGetJson(String accessToken, String appName) {
         var processBuilder = new ProcessBuilder();
-        String json = "";
-        //processBuilder.command("flyctl", "releases", "--app", appName, "-j", "-t", accessToken);
-        processBuilder.command(getCommandArgs("listAppReleases", accessToken, appName));
-        try {
-            var process = processBuilder.start();
-            try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                json = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-            }
-        } catch (Exception e) {
-            // ignored
-        }
-        return json;
+        processBuilder.command(CommandUtils.getCommandArgs("listAppReleases", accessToken, appName));
+        return CommandUtils.getProcessOutput(processBuilder);
     }
 
     private List<JsonNode> appReleasesFilterJson(String json) {
@@ -163,19 +135,8 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
 
     private String appSecretsGetJson(String accessToken, String appName) {
         var processBuilder = new ProcessBuilder();
-        String json = "";
-        // processBuilder.command("flyctl", "secrets", "list", "--app", appName, "-j",
-        // "-t", accessToken);
-        processBuilder.command(getCommandArgs("listAppSecrets", accessToken, appName));
-        try {
-            var process = processBuilder.start();
-            try (var reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                json = reader.lines().collect(Collectors.joining(System.lineSeparator()));
-            }
-        } catch (Exception e) {
-            // ignored
-        }
-        return json;
+        processBuilder.command(CommandUtils.getCommandArgs("listAppSecrets", accessToken, appName));
+        return CommandUtils.getProcessOutput(processBuilder);
     }
 
     private List<JsonNode> appSecretsFilterJson(String json) {
@@ -190,11 +151,5 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private String[] getCommandArgs(String key, Object... arguments) {
-        String stringWithSlots = flyCommands.getString(key);
-        String substitutedStrings = MessageFormat.format(stringWithSlots, arguments);
-        return substitutedStrings.split(" +");
     }
 }

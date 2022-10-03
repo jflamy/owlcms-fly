@@ -3,22 +3,70 @@ package ca.lerta.fly.data.entity;
 import javax.persistence.Entity;
 import javax.validation.constraints.NotEmpty;
 
+import ca.lerta.fly.utils.CommandUtils;
+
 @Entity
 public class Bundle extends AbstractEntity {
-    @NotEmpty(message = "Name cannot be empty")
-    private String owlcmsName;
-
-    @NotEmpty(message = "Name cannot be empty")
-    private String resultsName;
 
     private String bundleName;
 
+    @NotEmpty(message = "Name cannot be empty")
+    private String owlcmsName;
     private Boolean owlcmsActualRunning;
-    private Boolean resultsActualRunning;
-    private Boolean dBActualRunning;
-    private String dBName;
-
     private Boolean owlcmsDesiredRunning;
+
+    @NotEmpty(message = "Name cannot be empty")
+    private String resultsName;
+    private Boolean resultsActualRunning;
+    private Boolean resultsDesiredRunning;
+
+    private String dBName;
+    private Boolean dBActualRunning;
+    private Boolean dBDesiredRunning;
+
+    public Boolean getDBDesiredRunning() {
+        return dBDesiredRunning;
+    }
+
+    public void setDBDesiredRunning(Boolean dBDesiredRunning) {
+        this.dBDesiredRunning = dBDesiredRunning;
+    }
+
+    public Boolean getResultsDesiredRunning() {
+        return resultsDesiredRunning;
+    }
+
+    public void setResultsDesiredRunning(Boolean resultsDesiredRunning) {
+        this.resultsDesiredRunning = resultsDesiredRunning;
+    }
+
+    public Boolean getOwlcmsActualRunning() {
+        return owlcmsActualRunning;
+    }
+
+    public void setOwlcmsActualRunning(Boolean owlcmsActualRunning) {
+        this.owlcmsActualRunning = owlcmsActualRunning;
+    }
+
+    public Boolean getResultsActualRunning() {
+        return resultsActualRunning;
+    }
+
+    public void setResultsActualRunning(Boolean resultsActualRunning) {
+        this.resultsActualRunning = resultsActualRunning;
+    }
+
+    public Boolean getdBActualRunning() {
+        return dBActualRunning;
+    }
+
+    public void setdBActualRunning(Boolean dBActualRunning) {
+        this.dBActualRunning = dBActualRunning;
+    }
+
+    public Boolean getOwlcmsDesiredRunning() {
+        return owlcmsDesiredRunning;
+    }
 
     public String getBundleName() {
         return bundleName;
@@ -105,7 +153,41 @@ public class Bundle extends AbstractEntity {
         return this.owlcmsDesiredRunning != null ? this.owlcmsDesiredRunning : isOwlcmsActualRunning();
     }
 
-    public void syncWithRemote() {
-        
+    public void syncWithRemote(String accessToken) {
+        if (owlcmsActualRunning != null && owlcmsDesiredRunning != owlcmsActualRunning) {
+            if (Boolean.TRUE.equals(owlcmsDesiredRunning)) {
+                // start database if not running, then application
+                if (dBName != null) {
+                    var processBuilder = new ProcessBuilder();
+                    processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, dBName, 1));
+                    CommandUtils.getProcessOutput(processBuilder);
+                }
+                if (owlcmsName != null) {
+                    var processBuilder = new ProcessBuilder();
+                    processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, owlcmsName, 1));
+                    CommandUtils.getProcessOutput(processBuilder);
+                }
+            } else {
+                // stop owlcms, then stop database.
+                if (owlcmsName != null) {
+                    var processBuilder = new ProcessBuilder();
+                    processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, owlcmsName, 0));
+                    CommandUtils.getProcessOutput(processBuilder);
+                }
+                if (dBName != null) {
+                    var processBuilder = new ProcessBuilder();
+                    processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, dBName, 0));
+                    CommandUtils.getProcessOutput(processBuilder);
+                }
+            }
+        }
+        if (resultsActualRunning != null && resultsDesiredRunning != resultsActualRunning) {
+            if (resultsName != null) {
+                var processBuilder = new ProcessBuilder();
+                processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, resultsName,
+                        Boolean.TRUE.equals(resultsDesiredRunning) ? 1 : 0));
+                CommandUtils.getProcessOutput(processBuilder);
+            }
+        }
     }
 }
