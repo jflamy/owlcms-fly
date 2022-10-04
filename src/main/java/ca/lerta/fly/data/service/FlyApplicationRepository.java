@@ -64,7 +64,7 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
             for (JsonNode secretNode : appSecretsData) {
                 Map<String, Object> result3 = mapper.convertValue(secretNode, new TypeReference<Map<String, Object>>() {
                 });
-                logger.warn("**** {}", result3);
+                //logger.debug("**** {}", result3);
                 String secretName = (String) result3.get("secret");
                 if (secretName != null) {
                     if (secretName.startsWith(BUNDLE_PREFIX)) {
@@ -100,7 +100,6 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
             JsonNode in = mapper.readTree(json);
             final List<JsonNode> out = new ArrayList<>();
             q.apply(Scope.newChildScope(rootScope), in, out::add);
-            System.out.println(out);
             return out;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -110,13 +109,13 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
     private String appListGetJson(String accessToken) {
         var processBuilder = new ProcessBuilder();
         processBuilder.command(CommandUtils.getCommandArgs("listApplications", accessToken));
-        return CommandUtils.getProcessOutput(processBuilder);
+        return CommandUtils.getProcessOutput(processBuilder, accessToken);
     }
 
     private String appReleasesGetJson(String accessToken, String appName) {
         var processBuilder = new ProcessBuilder();
         processBuilder.command(CommandUtils.getCommandArgs("listAppReleases", accessToken, appName));
-        return CommandUtils.getProcessOutput(processBuilder);
+        return CommandUtils.getProcessOutput(processBuilder, accessToken);
     }
 
     private List<JsonNode> appReleasesFilterJson(String json) {
@@ -126,7 +125,6 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
             JsonNode in = mapper.readTree(json);
             final List<JsonNode> out = new ArrayList<>();
             q.apply(Scope.newChildScope(rootScope), in, out::add);
-            System.out.println(out);
             return out;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -136,7 +134,7 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
     private String appSecretsGetJson(String accessToken, String appName) {
         var processBuilder = new ProcessBuilder();
         processBuilder.command(CommandUtils.getCommandArgs("listAppSecrets", accessToken, appName));
-        return CommandUtils.getProcessOutput(processBuilder);
+        return CommandUtils.getProcessOutput(processBuilder, accessToken);
     }
 
     private List<JsonNode> appSecretsFilterJson(String json) {
@@ -145,8 +143,7 @@ public class FlyApplicationRepository extends InMemoryJpaRepository<FlyApplicati
             JsonQuery q = JsonQuery.compile(".[] | {secret: .Name}", Versions.JQ_1_6);
             JsonNode in = mapper.readTree(json);
             final List<JsonNode> out = new ArrayList<>();
-            q.apply(Scope.newChildScope(rootScope), in, out::add);
-            System.out.println(out);
+            q.apply(Scope.newChildScope(rootScope), in, out::add);;
             return out;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

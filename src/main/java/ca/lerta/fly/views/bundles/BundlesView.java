@@ -26,6 +26,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
@@ -85,7 +87,7 @@ public class BundlesView extends Div implements TokenAuthentication {
     private Bundle Bundle;
     private final BundleService bundleService;
 
-    private BundleRepository BundleRepository;
+    private BundleRepository bundleRepository;
     private String accessToken;
 
     private SplitLayout splitLayout;
@@ -115,7 +117,7 @@ public class BundlesView extends Div implements TokenAuthentication {
     @Override
     public void onAttach(AttachEvent e) {
         UI.getCurrent();
-        BundleRepository = bundleService.getRepository();
+        bundleRepository = bundleService.getRepository();
         VaadinSession session = e.getUI().getSession();
         session.accessSynchronously(() -> {
             accessToken = (String) session.getAttribute("ACCESS_TOKEN");
@@ -124,8 +126,8 @@ public class BundlesView extends Div implements TokenAuthentication {
         if (accessToken == null) {
             throw new RuntimeException("token not present, can't happen");
         } else {
-            BundleRepository.loadRepository(accessToken);
-            populateGrid(BundleRepository);
+            bundleRepository.loadRepository(accessToken);
+            populateGrid(bundleRepository);
             refreshGrid();
         }
     }
@@ -183,9 +185,8 @@ public class BundlesView extends Div implements TokenAuthentication {
                 bundle.setOwlcmsDesiredRunning(e.getValue());
                 var accessToken = (String) VaadinSession.getCurrent().getAttribute("ACCESS_TOKEN");
                 var accessToken2 = CommandUtils.getAccessToken();
-                logger.warn("1============={} {}",accessToken,accessToken2);
-                bundle.syncWithRemote(accessToken);
-                refreshGrid();
+                logger.warn("1============={} {}", accessToken, accessToken2);
+                syncAndRefresh(bundle, accessToken);
             });
         };
         ComponentRenderer<ToggleButton, Bundle> owlcmsRunningRenderer = new ComponentRenderer<>(ToggleButton::new,
@@ -199,9 +200,8 @@ public class BundlesView extends Div implements TokenAuthentication {
                     bundle.setResultsDesiredRunning(e.getValue());
                     var accessToken = (String) VaadinSession.getCurrent().getAttribute("ACCESS_TOKEN");
                     var accessToken2 = CommandUtils.getAccessToken();
-                    logger.warn("2============={} {}",accessToken,accessToken2);
-                    bundle.syncWithRemote(accessToken);;
-                    refreshGrid();
+                    logger.warn("2============={} {}", accessToken, accessToken2);
+                    syncAndRefresh(bundle, accessToken);
                 });
             } else {
                 toggle.setVisible(false);
@@ -226,12 +226,31 @@ public class BundlesView extends Div implements TokenAuthentication {
         clearForm();
     }
 
-    private void populateGrid(BundleRepository BundleRepository) {
+    private void syncAndRefresh(ca.lerta.fly.data.entity.Bundle bundle, String accessToken) {
+        var not = new Notification("Waiting 10 seconds for changes to take effect.");
+        not.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        not.setPosition(Position.MIDDLE);
+        not.setDuration(10000);
+        not.open();
+        var ui = UI.getCurrent();
+        new Thread(() -> ui.access(() -> {
+            bundle.syncWithRemote(accessToken);
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e1) {
+            }
+            bundleRepository.loadRepository(accessToken);
+            populateGrid(bundleRepository);
+            refreshGrid();
+        })).start();
+    }
+
+    private void populateGrid(BundleRepository bundleRepository) {
         // grid.setItems(query -> BundleRepository.list(
         // PageRequest.of(query.getPage(), query.getPageSize(),
         // VaadinSpringDataHelpers.toSpringDataSort(query)))
         // .stream());
-        grid.setItems(BundleRepository.findAll());
+        grid.setItems(bundleRepository.findAll());
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {

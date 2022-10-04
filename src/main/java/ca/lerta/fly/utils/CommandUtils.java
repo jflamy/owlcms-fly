@@ -1,5 +1,7 @@
 package ca.lerta.fly.utils;
 
+import java.io.File;
+import java.io.PrintWriter;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -23,8 +25,16 @@ public class CommandUtils {
         return substitutedStrings.split(" +");
     }
 
-    public static String getProcessOutput(ProcessBuilder processBuilder) {
+    public static synchronized String getProcessOutput(ProcessBuilder processBuilder, String accessToken) {
             try {
+                // ugly workaround, some commands don't understand --access-token
+                // because of synchronized, we clobber the file.
+                var homeDir = System.getProperty("user.home");
+                var flyConfigFile = new File(homeDir+"/.fly", "config.yml");
+                try (var fw = new PrintWriter(flyConfigFile)) {
+                    fw.println("access_token: "+accessToken);
+                }
+                
                 var process = processBuilder.start();
                 var jsons = new String[1];
                 var errors = new String[1];

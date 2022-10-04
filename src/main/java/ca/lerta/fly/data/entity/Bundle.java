@@ -160,24 +160,24 @@ public class Bundle extends AbstractEntity {
                 if (dBName != null) {
                     var processBuilder = new ProcessBuilder();
                     processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, dBName, 1));
-                    CommandUtils.getProcessOutput(processBuilder);
+                    CommandUtils.getProcessOutput(processBuilder, accessToken);
                 }
                 if (owlcmsName != null) {
                     var processBuilder = new ProcessBuilder();
                     processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, owlcmsName, 1));
-                    CommandUtils.getProcessOutput(processBuilder);
+                    CommandUtils.getProcessOutput(processBuilder, accessToken);
                 }
             } else {
                 // stop owlcms, then stop database.
                 if (owlcmsName != null) {
                     var processBuilder = new ProcessBuilder();
                     processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, owlcmsName, 0));
-                    CommandUtils.getProcessOutput(processBuilder);
+                    CommandUtils.getProcessOutput(processBuilder, accessToken);
                 }
                 if (dBName != null) {
                     var processBuilder = new ProcessBuilder();
                     processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, dBName, 0));
-                    CommandUtils.getProcessOutput(processBuilder);
+                    CommandUtils.getProcessOutput(processBuilder, accessToken);
                 }
             }
         }
@@ -186,7 +186,7 @@ public class Bundle extends AbstractEntity {
                 var processBuilder = new ProcessBuilder();
                 processBuilder.command(CommandUtils.getCommandArgs("appScale", accessToken, resultsName,
                         Boolean.TRUE.equals(resultsDesiredRunning) ? 1 : 0));
-                CommandUtils.getProcessOutput(processBuilder);
+                CommandUtils.getProcessOutput(processBuilder, accessToken);
             }
         }
     }
